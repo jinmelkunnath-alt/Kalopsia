@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalopsia — Database</title>
+    <title>Kalopsia - Chullikara | Data Centre Manager</title>
+    <link rel="icon" type="image/png" href="download.png">
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js">
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js">
@@ -18,61 +15,42 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js">
     </script>
 
+    <script type="importmap">
+        {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js","firebase/firestore":"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"}}
+    </script>
+
     <style>
         :root {
-            --bg: #edf1f5;
-            --bg2: #f4f6f9;
+            --bg: #eef1f5;
             --surface: #ffffff;
-            --surface2: #f8f9fb;
-            --surface3: #f0f2f6;
-            --border: #e0e3e8;
-            --border2: #eaecf1;
-            --border3: #f0f1f4;
-            --text: #1b1e27;
-            --text2: #535766;
-            --text3: #8a8e9b;
-            --text4: #a8acb6;
+            --surface2: #f9fafb;
+            --surface3: #f1f3f7;
+            --border: #e1e4ea;
+            --border2: #ebedf2;
+            --text: #1b1e28;
+            --text2: #545868;
+            --text3: #8b8f9c;
             --accent: #3f6ef0;
-            --accentL: #6b8ef5;
             --accentD: #2851cc;
             --accentGlow: rgba(63, 110, 240, 0.12);
             --green: #0d9e53;
             --greenBg: #e6f7ee;
-            --greenL: #15b865;
             --red: #e54545;
             --redBg: #fdeaea;
-            --redL: #f06060;
-            --blue: #3f6ef0;
+            --orange: #e8982e;
+            --orangeBg: #fff7ed;
             --blueBg: #e9efff;
-            --cash: #e8982e;
-            --cashBg: #fff7ed;
-            --upi: #2596a8;
-            --upiBg: #e8f7f9;
-            --chartBg: #fafbfc;
-            --chartGrid: #eef0f3;
-            --chartLine: #d5d8df;
-            --shadow1: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-            --shadow2: 0 3px 10px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
-            --shadow3: 0 6px 22px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.035);
-            --shadow4: 0 10px 34px rgba(0, 0, 0, 0.09), 0 3px 10px rgba(0, 0, 0, 0.04);
-            --shadowIn: inset 0 2px 5px rgba(0, 0, 0, 0.04);
             --shadowCard: 0 1px 0 #fff inset, 0 3px 14px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.025);
             --shadowBtn: 0 2px 7px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 0 rgba(255, 255, 255,
                     0.6) inset;
-            --shadowBtnDown: 0 1px 3px rgba(0, 0, 0, 0.07), inset 0 2px 4px rgba(0, 0, 0, 0.06);
             --shadowInput: inset 0 2px 5px rgba(0, 0, 0, 0.04), 0 1px 0 rgba(255, 255, 255, 0.5);
-            --r-xs: 5px;
             --r-sm: 9px;
             --r: 13px;
-            --r-lg: 18px;
-            --r-xl: 26px;
             --sidebarW: 238px;
             --topbarH: 52px;
             --t: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-            --tSlow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-
         * {
             margin: 0;
             padding: 0;
@@ -82,7 +60,6 @@
             font-size: 14px;
             scroll-behavior: smooth;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
         body {
             font-family: var(--font);
@@ -93,7 +70,6 @@
             overflow-x: hidden;
             letter-spacing: -0.01em;
         }
-
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -106,11 +82,6 @@
             background: #cdd1d8;
             border-radius: 8px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #aeb3bc;
-        }
-
-        /* SIDEBAR */
         .sidebar {
             width: var(--sidebarW);
             background: var(--surface);
@@ -123,84 +94,74 @@
             display: flex;
             flex-direction: column;
             box-shadow: 1px 0 16px rgba(0, 0, 0, 0.03);
-            transition: transform var(--tSlow);
+            transition: transform 0.3s ease;
         }
         .sidebar-logo {
-            padding: 1.1rem 1.1rem;
+            padding: 1rem 1.1rem;
             display: flex;
             align-items: center;
-            gap: 0.55rem;
+            gap: 0.6rem;
             border-bottom: 1px solid var(--border2);
             flex-shrink: 0;
         }
-        .sidebar-logo .logo-icon {
-            width: 38px;
-            height: 38px;
+        .sidebar-logo .logo-img {
+            width: 40px;
+            height: 40px;
             border-radius: var(--r-sm);
-            background: linear-gradient(135deg, #1a1e2b 0%, #252b3d 40%, #1e2640 100%);
-            display: flex;
+            object-fit: cover;
+            flex-shrink: 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            background: #1a1e2b;
+        }
+        .sidebar-logo .logo-fb {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--r-sm);
+            background: linear-gradient(135deg, #1a1e2b, #252b3d);
+            display: none;
             align-items: center;
             justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
             flex-shrink: 0;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.08);
-            position: relative;
-            overflow: hidden;
-        }
-        .sidebar-logo .logo-icon::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-            border-radius: var(--r-sm) var(--r-sm) 0 0;
-        }
-        .sidebar-logo .logo-icon svg {
-            width: 22px;
-            height: 22px;
-            position: relative;
-            z-index: 1;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         }
         .sidebar-logo .logo-text h2 {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             font-weight: 700;
             letter-spacing: -0.3px;
             color: var(--text);
-            line-height: 1.15;
+            line-height: 1.2;
         }
         .sidebar-logo .logo-text span {
-            font-size: 0.62rem;
+            font-size: 0.6rem;
             color: var(--text3);
             font-weight: 500;
-            letter-spacing: 0.4px;
         }
         .sidebar-nav {
             list-style: none;
             flex: 1;
-            padding: 0.6rem 0.55rem;
+            padding: 0.5rem 0.55rem;
             overflow-y: auto;
-        }
-        .sidebar-nav li {
-            margin-bottom: 1px;
         }
         .sidebar-nav li a {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            padding: 0.55rem 0.8rem;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
             border-radius: var(--r-sm);
             color: var(--text2);
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.83rem;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: var(--t);
         }
         .sidebar-nav li a:hover {
             background: var(--surface3);
             color: var(--text);
-            box-shadow: var(--shadow1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
         .sidebar-nav li a.active {
             background: var(--accent);
@@ -211,16 +172,16 @@
         .sidebar-nav li a .ni {
             width: 17px;
             text-align: center;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             flex-shrink: 0;
         }
         .sidebar-footer {
             border-top: 1px solid var(--border2);
-            padding: 0.65rem 0.9rem;
+            padding: 0.6rem 0.9rem;
             flex-shrink: 0;
             display: flex;
             align-items: center;
-            gap: 0.45rem;
+            gap: 0.4rem;
         }
         .status-dot {
             width: 7px;
@@ -237,19 +198,17 @@
             box-shadow: 0 0 6px rgba(229, 69, 69, 0.35);
         }
         .status-text {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--text3);
             font-weight: 500;
         }
-
-        /* MAIN */
         .main {
             flex: 1;
             margin-left: var(--sidebarW);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            transition: margin var(--tSlow);
+            transition: margin 0.3s ease;
         }
         .topbar {
             height: var(--topbarH);
@@ -266,18 +225,18 @@
             flex-shrink: 0;
         }
         .topbar h3 {
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             font-weight: 600;
             letter-spacing: -0.2px;
             color: var(--text);
         }
         .topbar .date-badge {
-            font-size: 0.73rem;
+            font-size: 0.7rem;
             color: var(--text3);
             font-weight: 500;
             background: var(--surface2);
-            padding: 0.3rem 0.7rem;
-            border-radius: 16px;
+            padding: 0.28rem 0.65rem;
+            border-radius: 14px;
             border: 1px solid var(--border2);
         }
         .content {
@@ -302,8 +261,6 @@
                 transform: translateY(0);
             }
         }
-
-        /* CARDS */
         .card {
             background: var(--surface);
             border-radius: var(--r);
@@ -311,7 +268,6 @@
             box-shadow: var(--shadowCard);
             border: 1px solid var(--border2);
             margin-bottom: 1rem;
-            transition: var(--t);
         }
         .card-header {
             display: flex;
@@ -322,18 +278,11 @@
             gap: 0.5rem;
         }
         .card-title {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 700;
             letter-spacing: -0.2px;
             color: var(--text);
         }
-        .card-subtitle {
-            font-size: 0.7rem;
-            color: var(--text3);
-            font-weight: 500;
-        }
-
-        /* STAT CARDS */
         .stat-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
@@ -348,12 +297,10 @@
             border: 1px solid var(--border2);
             transition: var(--t);
             cursor: default;
-            position: relative;
-            overflow: hidden;
         }
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow3);
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.07);
         }
         .stat-card .sc-icon {
             width: 30px;
@@ -364,28 +311,20 @@
             justify-content: center;
             font-size: 0.8rem;
             margin-bottom: 0.45rem;
-            box-shadow: var(--shadow1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
         .stat-card .sc-label {
-            font-size: 0.63rem;
+            font-size: 0.62rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text3);
             font-weight: 700;
         }
         .stat-card .sc-value {
-            font-size: 1.3rem;
+            font-size: 1.28rem;
             font-weight: 700;
             letter-spacing: -0.35px;
             margin-top: 0.1rem;
-            transition: var(--t);
-        }
-        .sc-income .sc-icon {
-            background: var(--greenBg);
-            color: var(--green);
-        }
-        .sc-income .sc-value {
-            color: var(--green);
         }
         .sc-expense .sc-icon {
             background: var(--redBg);
@@ -394,24 +333,50 @@
         .sc-expense .sc-value {
             color: var(--red);
         }
+        .sc-income .sc-icon {
+            background: var(--greenBg);
+            color: var(--green);
+        }
+        .sc-income .sc-value {
+            color: var(--green);
+        }
+        .sc-pending .sc-icon {
+            background: var(--redBg);
+            color: var(--red);
+        }
+        .sc-pending .sc-value {
+            color: var(--red);
+        }
+        .sc-partial .sc-icon {
+            background: var(--orangeBg);
+            color: var(--orange);
+        }
+        .sc-partial .sc-value {
+            color: var(--orange);
+        }
+        .sc-paid .sc-icon {
+            background: var(--greenBg);
+            color: var(--green);
+        }
+        .sc-paid .sc-value {
+            color: var(--green);
+        }
         .sc-profit .sc-icon {
             background: var(--blueBg);
-            color: var(--blue);
+            color: var(--accent);
         }
         .sc-profit .sc-value {
-            color: var(--blue);
+            color: var(--accent);
         }
         .section-label {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.65px;
+            letter-spacing: 0.6px;
             color: var(--text3);
             margin-bottom: 0.5rem;
             padding-left: 0.15rem;
         }
-
-        /* BUTTONS */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -422,45 +387,32 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 0.78rem;
-            letter-spacing: -0.1px;
             transition: var(--t);
             box-shadow: var(--shadowBtn);
             font-family: var(--font);
             background: var(--surface);
             color: var(--text);
-            text-decoration: none;
             white-space: nowrap;
         }
         .btn:hover {
             transform: translateY(-1px);
-            box-shadow: var(--shadow2);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
         }
         .btn:active {
             transform: translateY(0);
-            box-shadow: var(--shadowBtnDown);
-            transition: 0.06s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07), inset 0 2px 4px rgba(0, 0, 0, 0.06);
+            transition: 0.06s;
         }
         .btn-primary {
             background: var(--accent);
             color: #fff;
             border-color: var(--accentD);
-            box-shadow: 0 3px 10px rgba(63, 110, 240, 0.22), 0 1px 2px rgba(0, 0, 0, 0.06);
-        }
-        .btn-primary:hover {
-            background: var(--accentL);
-            box-shadow: 0 5px 15px rgba(63, 110, 240, 0.28);
-        }
-        .btn-success {
-            background: var(--green);
-            color: #fff;
-            border-color: #0b8644;
-            box-shadow: 0 3px 10px rgba(13, 158, 83, 0.2);
+            box-shadow: 0 3px 10px rgba(63, 110, 240, 0.22);
         }
         .btn-danger {
             background: var(--red);
             color: #fff;
             border-color: #c93030;
-            box-shadow: 0 3px 10px rgba(229, 69, 69, 0.2);
         }
         .btn-sm {
             padding: 0.3rem 0.65rem;
@@ -469,7 +421,7 @@
         }
         .btn-xs {
             padding: 0.2rem 0.45rem;
-            font-size: 0.64rem;
+            font-size: 0.63rem;
             border-radius: 5px;
         }
         .btn-ghost {
@@ -480,11 +432,9 @@
         }
         .btn-ghost:hover {
             background: var(--surface3);
-            box-shadow: var(--shadow1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             border-color: var(--border2);
         }
-
-        /* FORMS */
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -493,10 +443,10 @@
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.22rem;
+            gap: 0.2rem;
         }
         .form-group label {
-            font-size: 0.67rem;
+            font-size: 0.65rem;
             font-weight: 700;
             color: var(--text2);
             text-transform: uppercase;
@@ -524,21 +474,56 @@
             box-shadow: 0 0 0 3px var(--accentGlow), var(--shadowInput);
             background: #fff;
         }
-
-        /* TABLE */
+        .status-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .status-chip {
+            padding: 0.5rem 1.1rem;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: var(--t);
+            background: var(--surface);
+            color: var(--text2);
+            user-select: none;
+        }
+        .status-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .status-chip.selected-paid {
+            background: var(--greenBg);
+            border-color: var(--green);
+            color: #0a6e30;
+        }
+        .status-chip.selected-partial {
+            background: var(--orangeBg);
+            border-color: var(--orange);
+            color: #a86510;
+        }
+        .status-chip.selected-notpaid {
+            background: var(--redBg);
+            border-color: var(--red);
+            color: #a02525;
+        }
         .table-wrap {
             overflow-x: auto;
             border-radius: var(--r-sm);
             border: 1px solid var(--border2);
             background: var(--surface);
-            max-height: 52vh;
+            max-height: 50vh;
             overflow-y: auto;
         }
         .table-wrap table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 620px;
+            font-size: 0.77rem;
+            min-width: 750px;
         }
         .table-wrap thead {
             position: sticky;
@@ -547,62 +532,55 @@
         }
         .table-wrap thead th {
             background: #fafbfc;
-            padding: 0.6rem 0.6rem;
+            padding: 0.55rem 0.6rem;
             text-align: left;
             font-weight: 700;
             color: var(--text2);
             text-transform: uppercase;
-            font-size: 0.63rem;
+            font-size: 0.62rem;
             letter-spacing: 0.5px;
             white-space: nowrap;
             cursor: pointer;
-            user-select: none;
             border-bottom: 1.5px solid #e8eaef;
-            transition: var(--t);
-        }
-        .table-wrap thead th:hover {
-            color: var(--text);
-            background: #f0f2f5;
         }
         .table-wrap tbody td {
-            padding: 0.5rem 0.6rem;
+            padding: 0.48rem 0.6rem;
             border-bottom: 1px solid #f4f5f7;
             color: var(--text);
             vertical-align: middle;
-        }
-        .table-wrap tbody tr {
-            transition: background 0.15s ease;
         }
         .table-wrap tbody tr:hover {
             background: #fafbfd;
         }
         .badge {
             display: inline-block;
-            padding: 2px 7px;
+            padding: 2px 8px;
             border-radius: 10px;
-            font-size: 0.63rem;
+            font-size: 0.62rem;
             font-weight: 700;
             letter-spacing: 0.25px;
             text-transform: uppercase;
         }
-        .badge-in {
+        .badge-paid {
             background: var(--greenBg);
             color: #0a6e30;
         }
-        .badge-ex {
+        .badge-partial {
+            background: var(--orangeBg);
+            color: #a86510;
+        }
+        .badge-notpaid {
             background: var(--redBg);
             color: #a02525;
         }
-        .badge-cash {
-            background: var(--cashBg);
-            color: #9e5d0e;
-        }
         .badge-upi {
-            background: var(--upiBg);
+            background: #e8f7f9;
             color: #14636c;
         }
-
-        /* PAGINATION */
+        .badge-cash {
+            background: #fff7ed;
+            color: #a86510;
+        }
         .pagination {
             display: flex;
             gap: 0.2rem;
@@ -612,57 +590,40 @@
             margin-top: 0.7rem;
         }
         .pagination button {
-            padding: 0.28rem 0.55rem;
+            padding: 0.26rem 0.5rem;
             border: 1px solid var(--border);
             border-radius: 5px;
             background: var(--surface);
             color: var(--text);
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.7rem;
-            transition: var(--t);
-            box-shadow: var(--shadow1);
+            font-size: 0.68rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             font-family: var(--font);
         }
         .pagination button.active {
             background: var(--accent);
             color: #fff;
             border-color: var(--accentD);
-            box-shadow: 0 2px 6px rgba(63, 110, 240, 0.2);
         }
-        .pagination button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        /* FILTER */
         .filter-bar {
             display: flex;
-            gap: 0.4rem;
+            gap: 0.35rem;
             flex-wrap: wrap;
             align-items: center;
         }
         .filter-bar input,
         .filter-bar select {
-            padding: 0.38rem 0.6rem;
+            padding: 0.36rem 0.55rem;
             border: 1px solid var(--border);
             border-radius: 6px;
             background: var(--surface);
             color: var(--text);
-            font-size: 0.74rem;
-            box-shadow: var(--shadow1);
+            font-size: 0.73rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             outline: none;
             font-family: var(--font);
-            transition: var(--t);
         }
-        .filter-bar input:focus,
-        .filter-bar select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accentGlow);
-        }
-
-        /* TOAST */
         .toast-ctr {
             position: fixed;
             top: 16px;
@@ -675,17 +636,14 @@
         }
         .toast {
             background: var(--surface);
-            padding: 0.65rem 1rem;
+            padding: 0.6rem 0.95rem;
             border-radius: var(--r-sm);
-            box-shadow: var(--shadow4);
+            box-shadow: 0 10px 34px rgba(0, 0, 0, 0.09);
             animation: toastIn 0.28s ease;
             pointer-events: auto;
             font-weight: 500;
-            font-size: 0.78rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            min-width: 200px;
+            font-size: 0.76rem;
+            min-width: 190px;
             border-left: 3px solid var(--accent);
         }
         .toast.ok {
@@ -704,51 +662,34 @@
                 transform: translateX(0);
             }
         }
-        @keyframes toastOut {
-            from {
-                opacity: 1;
-                transform: translateX(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(60px);
-            }
-        }
-
-        /* UNDO */
         .undo-bar {
             position: fixed;
             bottom: 22px;
             left: 50%;
             transform: translateX(-50%);
             background: var(--surface);
-            padding: 0.5rem 1.1rem;
-            border-radius: 22px;
-            box-shadow: var(--shadow4);
+            padding: 0.48rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 34px rgba(0, 0, 0, 0.09);
             z-index: 9000;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.55rem;
             font-weight: 500;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             border: 1px solid var(--border2);
-            animation: pageIn 0.25s ease;
         }
         .undo-bar button {
             background: var(--accent);
             color: #fff;
             border: none;
-            padding: 0.28rem 0.8rem;
-            border-radius: 12px;
+            padding: 0.26rem 0.75rem;
+            border-radius: 11px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.72rem;
-            transition: var(--t);
+            font-size: 0.7rem;
             font-family: var(--font);
-            box-shadow: 0 2px 5px rgba(63, 110, 240, 0.18);
         }
-
-        /* CHART */
         .chart-wrap {
             position: relative;
             width: 100%;
@@ -758,7 +699,7 @@
         }
         .charts-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 0.9rem;
         }
         .trading-chart-card {
@@ -769,13 +710,11 @@
             border: 1px solid var(--border2);
             margin-bottom: 1rem;
         }
-
-        /* MOBILE */
         .mob-menu {
             display: none;
             background: none;
             border: none;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             cursor: pointer;
             color: var(--text);
             padding: 0.15rem;
@@ -818,18 +757,8 @@
                 grid-template-columns: 1fr 1fr;
                 gap: 0.45rem;
             }
-            .stat-card {
-                padding: 0.65rem;
-            }
-            .stat-card .sc-value {
-                font-size: 1.05rem;
-            }
             .form-row {
                 grid-template-columns: 1fr;
-            }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
             }
             .topbar {
                 padding: 0 0.6rem;
@@ -840,1395 +769,923 @@
             .card {
                 padding: 0.8rem;
             }
-            .trading-chart-card {
-                padding: 0.7rem 0.8rem 0.9rem;
+            .status-selector {
+                gap: 0.35rem;
+            }
+            .status-chip {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
             }
         }
     </style>
 </head>
 <body>
-
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-logo">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="2" y="14" width="3" height="7" rx="0.6" fill="#15b865" opacity="0.9"/>
-                    <rect x="7" y="9" width="3" height="12" rx="0.6" fill="#e54545" opacity="0.85"/>
-                    <rect x="12" y="5" width="3" height="16" rx="0.6" fill="#15b865" opacity="0.9"/>
-                    <rect x="17" y="10" width="3" height="11" rx="0.6" fill="#e54545" opacity="0.8"/>
-                    <line x1="3.5" y1="13" x2="20.5" y2="13" stroke="rgba(255,255,255,0.5)" stroke-width="0.7" stroke-dasharray="2 2"/>
-                    <polyline points="2,16 7,10 12,5 17,11 21,8" fill="none" stroke="#f0c040" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
-                </svg>
-            </div>
-            <div class="logo-text">
-                <h2>Kalopsia Chullikara</h2>
-                <span>Pixel Code Media</span>
-            </div>
+            <img src="download.png" alt="Logo" class="logo-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="logo-fb">K</div>
+            <div class="logo-text"><h2>Kalopsia - Chullikara</h2><span>Pixel Code Media</span></div>
         </div>
         <ul class="sidebar-nav">
-            <li><a data-page="dashboard" class="active" onclick="navTo('dashboard')"><span class="ni">📊</span> Dashboard</a></li>
-            <li><a data-page="add" onclick="navTo('add')"><span class="ni">➕</span> Add Transaction</a></li>
-            <li><a data-page="transactions" onclick="navTo('transactions')"><span class="ni">📝</span> Transactions</a></li>
-            <li><a data-page="reports" onclick="navTo('reports')"><span class="ni">📄</span> Reports</a></li>
-            <li><a data-page="analytics" onclick="navTo('analytics')"><span class="ni">📈</span> Analytics</a></li>
-            <li><a data-page="export" onclick="navTo('export')"><span class="ni">📥</span> Export</a></li>
-            <li><a data-page="settings" onclick="navTo('settings')"><span class="ni">⚙️</span> Settings</a></li>
+            <li><a data-page="dashboard" class="active" onclick="navTo('dashboard')"><span class="ni">📊</span>Dashboard</a></li>
+            <li><a data-page="dce" onclick="navTo('dce')"><span class="ni">🏗️</span>Data Centre</a></li>
+            <li><a data-page="reports" onclick="navTo('reports')"><span class="ni">📄</span>Reports</a></li>
+            <li><a data-page="analytics" onclick="navTo('analytics')"><span class="ni">📈</span>Analytics</a></li>
+            <li><a data-page="export" onclick="navTo('export')"><span class="ni">📥</span>Export</a></li>
+            <li><a data-page="settings" onclick="navTo('settings')"><span class="ni">⚙️</span>Settings</a></li>
         </ul>
-        <div class="sidebar-footer">
-            <span class="status-dot online" id="fbDot"></span>
-            <span class="status-text" id="fbText">Local Storage Ready</span>
-        </div>
+        <div class="sidebar-footer"><span class="status-dot online" id="fbDot"></span><span class="status-text" id="fbText">Firestore Ready</span></div>
     </aside>
-
-    <!-- MAIN -->
     <div class="main" id="mainContent">
         <header class="topbar">
-            <div style="display:flex;align-items:center;gap:0.45rem;">
-                <button class="mob-menu" onclick="toggleSidebar()" aria-label="Menu">☰</button>
-                <h3 id="pageTitle">📊 Dashboard</h3>
-            </div>
+            <div style="display:flex;align-items:center;gap:0.45rem;"><button class="mob-menu" onclick="toggleSidebar()">☰</button><h3 id="pageTitle">📊 Dashboard</h3></div>
             <span class="date-badge" id="liveDate"></span>
         </header>
-
         <div class="content">
-            <!-- DASHBOARD -->
             <div class="page active" id="page-dashboard">
-                <div class="trading-chart-card">
-                    <div class="card-header"><span class="card-title">📈 Revenue Trend — Income, Expense & Profit</span><span class="card-subtitle">Last 30 days</span></div>
-                    <div class="chart-wrap" style="height:350px;"><canvas id="mainChart"></canvas></div>
-                </div>
-                <div class="section-label">📅 Today</div>
-                <div class="stat-row" id="statToday"></div>
-                <div class="section-label">📆 This Week</div>
-                <div class="stat-row" id="statWeek"></div>
-                <div class="section-label">🗓️ This Month</div>
-                <div class="stat-row" id="statMonth"></div>
-                <div class="section-label">🏦 All Time Total</div>
-                <div class="stat-row" id="statTotal"></div>
-                <div class="card">
-                    <div class="card-header"><span class="card-title">🕐 Recent Transactions</span></div>
-                    <div id="recentTx" style="max-height:240px;overflow-y:auto;"></div>
-                </div>
+                <div class="trading-chart-card"><div class="card-header"><span class="card-title">📈 Expense vs Recovery — Last 30 Days</span></div><div class="chart-wrap" style="height:340px;"><canvas id="mainChart"></canvas></div></div>
+                <div class="section-label">📅 Today</div><div class="stat-row" id="statToday"></div>
+                <div class="section-label">📆 This Week</div><div class="stat-row" id="statWeek"></div>
+                <div class="section-label">🗓️ This Month</div><div class="stat-row" id="statMonth"></div>
+                <div class="section-label">🏦 All Time</div><div class="stat-row" id="statTotal"></div>
+                <div class="card"><div class="card-header"><span class="card-title">🕐 Recent Entries</span></div><div id="recentTx" style="max-height:220px;overflow-y:auto;"></div></div>
             </div>
-
-            <!-- ADD -->
-            <div class="page" id="page-add">
+            <div class="page" id="page-dce">
                 <div class="card">
-                    <div class="card-header"><span class="card-title">➕ New Transaction</span></div>
-                    <form id="txForm" onsubmit="handleAddTx(event)">
+                    <div class="card-header"><span class="card-title">🏗️ New Service Entry</span></div>
+                    <form id="dceForm" onsubmit="handleDCESubmit(event)">
+                        <label style="font-size:0.67rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.4rem;display:block;">Customer Payment Status</label>
+                        <div class="status-selector" id="statusSelector">
+                            <div class="status-chip selected-paid" data-status="Paid" onclick="setStatus('Paid')">✅ Paid</div>
+                            <div class="status-chip" data-status="Partial" onclick="setStatus('Partial')">🟡 Partial</div>
+                            <div class="status-chip" data-status="Not Paid" onclick="setStatus('Not Paid')">🔴 Not Paid</div>
+                        </div>
+                        <input type="hidden" id="dceStatus" value="Paid">
                         <div class="form-row">
-                            <div class="form-group"><label>Amount (₹)</label><input type="number" id="txAmt" placeholder="0.00" step="0.01" min="0.01" required></div>
-                            <div class="form-group"><label>Date (DD/MM/YYYY)</label><input type="date" id="txDt" required></div>
-                            <div class="form-group"><label>Payment Method</label><select id="txMthd" required><option value="">Choose</option><option value="Cash">💵 Cash</option><option value="UPI">📱 UPI</option></select></div>
-                            <div class="form-group"><label>Type</label><select id="txTyp" required><option value="">Choose</option><option value="Income">💰 Income</option><option value="Expense">💸 Expense</option></select></div>
+                            <div class="form-group"><label>Customer Amount (₹)</label><input type="number" id="dceCustAmt" placeholder="0.00" step="0.01" min="0" value="0" required></div>
+                            <div class="form-group"><label>Date (DD/MM/YYYY)</label><input type="date" id="dceDt" required></div>
+                            <div class="form-group" id="dceExpenseGroup"><label>Expense Amount (₹)</label><input type="number" id="dceExpAmt" placeholder="0.00" step="0.01" min="0" value="0"></div>
+                            <div class="form-group"><label>Type</label><select id="dceTyp" required><option value="Customer Payment">💰 Customer Payment</option><option value="Expense">💸 Expense</option></select></div>
+                            <div class="form-group"><label>Payment Method</label><select id="dceMthd" required><option value="UPI">📱 UPI</option><option value="Cash">💵 Cash</option><option value="Not Paid" id="dceMthdNotPaid">🚫 Not Paid</option></select></div>
                         </div>
-                        <div class="form-group" style="margin-top:0.6rem;"><label>Description</label><textarea id="txDesc" rows="2" placeholder="What was this transaction for?" required></textarea></div>
-                        <input type="hidden" id="txEditId">
-                        <div style="margin-top:0.7rem;display:flex;gap:0.45rem;flex-wrap:wrap;">
-                            <button type="submit" class="btn btn-primary" id="txSubmitBtn">💾 Save Transaction</button>
-                            <button type="button" class="btn btn-ghost btn-sm" id="txCancelBtn" style="display:none;" onclick="cancelTxEdit()">Cancel Edit</button>
-                        </div>
+                        <div class="form-group" style="margin-top:0.6rem;"><label>Description</label><textarea id="dceDesc" rows="2" placeholder="Describe this service entry..." required></textarea></div>
+                        <input type="hidden" id="dceEditId">
+                        <div style="margin-top:0.7rem;display:flex;gap:0.45rem;flex-wrap:wrap;"><button type="submit" class="btn btn-primary" id="dceSubmitBtn">💾 Save Entry</button><button type="button" class="btn btn-ghost btn-sm" id="dceCancelBtn" style="display:none;" onclick="cancelDCEEdit()">Cancel</button></div>
                     </form>
                 </div>
-            </div>
-
-            <!-- TRANSACTIONS -->
-            <div class="page" id="page-transactions">
+                <div class="stat-row" id="dceSummaryCards"></div>
                 <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">📝 All Transactions</span>
-                        <div class="filter-bar">
-                            <input type="text" id="txSearch" placeholder="🔍 Search..." oninput="renderTxTable()">
-                            <select id="txFType" onchange="renderTxTable()"><option value="all">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option></select>
-                            <select id="txFMeth" onchange="renderTxTable()"><option value="all">All Methods</option><option value="Cash">Cash</option><option value="UPI">UPI</option></select>
-                            <input type="date" id="txFFrom" onchange="renderTxTable()" title="From">
-                            <input type="date" id="txFTo" onchange="renderTxTable()" title="To">
-                        </div>
+                    <div class="card-header"><span class="card-title">📝 All Service Entries</span>
+                        <div class="filter-bar"><input type="text" id="dceSearch" placeholder="🔍 Search..." oninput="renderDCETable()"><select id="dceFStatus" onchange="renderDCETable()"><option value="all">All Status</option><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Not Paid">Not Paid</option></select><input type="date" id="dceFFrom" onchange="renderDCETable()" title="From"><input type="date" id="dceFTo" onchange="renderDCETable()" title="To"></div>
                     </div>
-                    <div class="table-wrap">
-                        <table><thead><tr><th data-sort="date" onclick="sortTx('date')">Date ↕</th><th data-sort="amount" onclick="sortTx('amount')">Amount ↕</th><th>Type</th><th>Method</th><th>Description</th><th>Actions</th></tr></thead>
-                            <tbody id="txTbody"></tbody></table>
-                    </div>
-                    <div class="pagination" id="txPag"></div>
-                    <p style="text-align:center;color:var(--text3);font-size:0.7rem;margin-top:0.3rem;" id="txInfo"></p>
+                    <div class="table-wrap"><table><thead><tr><th data-sort="date" onclick="sortDCE('date')">Date ↕</th><th data-sort="custAmt" onclick="sortDCE('custAmt')">Cust. Amt ↕</th><th data-sort="expAmt" onclick="sortDCE('expAmt')">Expense ↕</th><th data-sort="profit" onclick="sortDCE('profit')">Profit ↕</th><th>Status</th><th>Method</th><th>Description</th><th>Actions</th></tr></thead><tbody id="dceTbody"></tbody></table></div>
+                    <div class="pagination" id="dcePag"></div><p style="text-align:center;color:var(--text3);font-size:0.68rem;margin-top:0.3rem;" id="dceInfo"></p>
                 </div>
             </div>
-
-            <!-- REPORTS -->
             <div class="page" id="page-reports">
                 <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">📄 Financial Reports</span>
-                        <div class="filter-bar">
-                            <select id="rptPeriod" onchange="toggleRptCustom();genReport();"><option value="daily">Today</option><option value="weekly">This Week</option><option value="monthly" selected>This Month</option><option value="yearly">This Year</option><option value="custom">Custom Range</option></select>
-                            <input type="date" id="rptFrom" style="display:none;" onchange="genReport()">
-                            <input type="date" id="rptTo" style="display:none;" onchange="genReport()">
-                            <button class="btn btn-primary btn-sm" onclick="genReport()">🔄 Generate</button>
-                            <button class="btn btn-sm" onclick="printReport()">🖨️ Print</button>
-                        </div>
+                    <div class="card-header"><span class="card-title">📄 Reports</span>
+                        <div class="filter-bar"><select id="rptPeriod" onchange="toggleRptCustom();genReport();"><option value="daily">Today</option><option value="weekly">This Week</option><option value="monthly" selected>This Month</option><option value="yearly">This Year</option><option value="custom">Custom Range</option></select><input type="date" id="rptFrom" style="display:none;" onchange="genReport()"><input type="date" id="rptTo" style="display:none;" onchange="genReport()"><button class="btn btn-primary btn-sm" onclick="genReport()">🔄 Generate</button><button class="btn btn-sm" onclick="printReport()">🖨️ Print</button></div>
                     </div>
                     <div class="stat-row" id="rptStatRow" style="margin-top:0.4rem;"></div>
-                    <div class="table-wrap" style="margin-top:0.6rem;max-height:42vh;"><table><thead><tr><th>Date</th><th>Amount</th><th>Type</th><th>Method</th><th>Description</th></tr></thead><tbody id="rptTbody"></tbody></table></div>
+                    <div class="table-wrap" style="margin-top:0.6rem;max-height:40vh;"><table><thead><tr><th>Date</th><th>Cust. Amt</th><th>Expense</th><th>Profit</th><th>Status</th><th>Method</th><th>Description</th></tr></thead><tbody id="rptTbody"></tbody></table></div>
                 </div>
             </div>
-
-            <!-- ANALYTICS -->
             <div class="page" id="page-analytics">
-                <div class="trading-chart-card"><div class="card-header"><span class="card-title">📈 Income & Expense Trend (60 Days)</span></div><div class="chart-wrap" style="height:320px;"><canvas id="aLine"></canvas></div></div>
-                <div class="charts-row" style="margin-top:0.9rem;">
-                    <div class="card"><div class="card-header"><span class="card-title">📅 Weekly Breakdown</span></div><div class="chart-wrap" style="height:250px;"><canvas id="aBar"></canvas></div></div>
-                    <div class="card"><div class="card-header"><span class="card-title">📊 Business Summary</span></div><div id="aSummary" style="max-height:250px;overflow-y:auto;"></div></div>
-                </div>
+                <div class="trading-chart-card"><div class="card-header"><span class="card-title">📈 Expense & Recovery Trend (60 Days)</span></div><div class="chart-wrap" style="height:330px;"><canvas id="aLine"></canvas></div></div>
+                <div class="charts-row" style="margin-top:0.9rem;"><div class="card"><div class="card-header"><span class="card-title">📅 Weekly Net</span></div><div class="chart-wrap" style="height:240px;"><canvas id="aBar"></canvas></div></div><div class="card"><div class="card-header"><span class="card-title">📊 Summary</span></div><div id="aSummary" style="max-height:240px;overflow-y:auto;"></div></div></div>
             </div>
-
-            <!-- EXPORT -->
             <div class="page" id="page-export">
-                <div class="card" style="text-align:center;">
-                    <div class="card-header" style="justify-content:center;"><span class="card-title">📥 Export Your Financial Data</span></div>
-                    <div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap;margin:1.1rem 0;">
-                        <button class="btn btn-primary" onclick="exportPDF()">📄 Export PDF Report</button>
-                        <button class="btn btn-success" onclick="exportExcel()">📊 Export Excel File</button>
-                        <button class="btn" onclick="printReport()">🖨️ Print Report</button>
-                    </div>
-                    <div class="filter-bar" style="justify-content:center;"><select id="expPeriod" onchange="updateExpPreview()"><option value="all">All Time</option><option value="daily">Today</option><option value="weekly">This Week</option><option value="monthly">This Month</option><option value="yearly">This Year</option></select></div>
-                    <div id="expPreview" style="margin-top:0.7rem;"></div>
-                </div>
+                <div class="card" style="text-align:center;"><div class="card-header" style="justify-content:center;"><span class="card-title">📥 Export Data</span></div><div style="display:flex;gap:0.7rem;justify-content:center;flex-wrap:wrap;margin:1.1rem 0;"><button class="btn btn-primary" onclick="exportPDF()">📄 PDF Report</button><button class="btn btn-primary" onclick="exportExcel()" style="background:#0d9e53;border-color:#0b8644;">📊 Excel File</button><button class="btn" onclick="printReport()">🖨️ Print</button></div><div class="filter-bar" style="justify-content:center;"><select id="expPeriod" onchange="updateExpPreview()"><option value="all">All Time</option><option value="daily">Today</option><option value="weekly">This Week</option><option value="monthly">This Month</option><option value="yearly">This Year</option></select></div><div id="expPreview" style="margin-top:0.7rem;"></div></div>
             </div>
-
-            <!-- SETTINGS -->
             <div class="page" id="page-settings">
-                <div class="card"><div class="card-header"><span class="card-title">☁️ Cloud Storage</span></div><div id="setCloud" style="font-size:0.8rem;color:var(--text2);"></div></div>
-                <div class="card"><div class="card-header"><span class="card-title">📦 Backup & Restore</span></div><div style="display:flex;gap:0.55rem;flex-wrap:wrap;"><button class="btn btn-sm" onclick="backupJSON()">💾 Download Backup (JSON)</button><button class="btn btn-sm" onclick="document.getElementById('restoreFile').click()">📂 Restore from File</button><input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="restoreJSON(event)"></div></div>
-                <div class="card"><div class="card-header"><span class="card-title">📊 Data Statistics</span></div><div id="setStats" style="font-size:0.8rem;color:var(--text2);"></div></div>
-                <div class="card"><div class="card-header"><span class="card-title">🖥️ System Information</span></div><div id="setSys" style="font-size:0.8rem;color:var(--text2);"></div></div>
-                <div class="card" style="border-left:3px solid var(--red);"><div class="card-header"><span class="card-title" style="color:var(--red);">⚠️ Danger Zone</span></div><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Clear All Transaction Data</button><p style="font-size:0.67rem;color:var(--text3);margin-top:0.3rem;">This permanently erases all transactions. This action cannot be undone.</p></div>
+                <div class="card"><div class="card-header"><span class="card-title">☁️ Firestore Database</span></div><div id="setCloud" style="font-size:0.8rem;color:var(--text2);"></div></div>
+                <div class="card"><div class="card-header"><span class="card-title">📦 Backup & Restore</span></div><div style="display:flex;gap:0.55rem;flex-wrap:wrap;"><button class="btn btn-sm" onclick="backupJSON()">💾 Download Backup</button><button class="btn btn-sm" onclick="document.getElementById('restoreFile').click()">📂 Restore</button><input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="restoreJSON(event)"></div></div>
+                <div class="card"><div class="card-header"><span class="card-title">📊 Statistics</span></div><div id="setStats" style="font-size:0.8rem;color:var(--text2);"></div></div>
+                <div class="card"><div class="card-header"><span class="card-title">🖥️ System</span></div><div id="setSys" style="font-size:0.8rem;color:var(--text2);"></div></div>
+                <div class="card" style="border-left:3px solid var(--red);"><div class="card-header"><span class="card-title" style="color:var(--red);">⚠️ Danger Zone</span></div><button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ Clear All Entries</button><p style="font-size:0.65rem;color:var(--text3);margin-top:0.3rem;">Permanently deletes all data from Firestore.</p></div>
             </div>
         </div>
     </div>
-
-    <!-- TOAST -->
     <div class="toast-ctr" id="toastCtr"></div>
-    <!-- UNDO -->
-    <div class="undo-bar" id="undoBar" style="display:none;"><span>🗑️ Transaction deleted</span><button onclick="undoDel()">↩ Undo</button><span style="cursor:pointer;color:var(--text3);" onclick="dismissUndo()">✕</span></div>
+    <div class="undo-bar" id="undoBar" style="display:none;"><span>🗑️ Entry deleted</span><button onclick="undoDel()">↩ Undo</button><span style="cursor:pointer;color:var(--text3);" onclick="dismissUndo()">✕</span></div>
 
     <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  setDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  writeBatch
-} from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+        import { initializeApp } from "firebase/app";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc, query, orderBy, writeBatch } from
+        "firebase/firestore";
 
-window.firebaseExports = {
-  initializeApp,
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  setDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  writeBatch,
-  getAnalytics
-};
-</script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTK2EbMniFm5MpKqcnjqDhG8qZobvfCVQ",
+            authDomain: "kalopsia-0404.firebaseapp.com",
+            projectId: "kalopsia-0404",
+            storageBucket: "kalopsia-0404.firebasestorage.app",
+            messagingSenderId: "992764580685",
+            appId: "1:992764580685:web:2dfb9d9309a7cc29ea5d04",
+            measurementId: "G-QPD6Y6GXB3"
+        };
 
-<script>
-/* global Chart, XLSX, jspdf */
-var firebaseConfig = {
-  apiKey: "AIzaSyCTK2EbMniFm5MpKqcnjqDhG8qZobvfCVQ",
-  authDomain: "kalopsia-0404.firebaseapp.com",
-  projectId: "kalopsia-0404",
-  storageBucket: "kalopsia-0404.firebasestorage.app",
-  messagingSenderId: "992764580685",
-  appId: "1:992764580685:web:2dfb9d9309a7cc29ea5d04",
-  measurementId: "G-QPD6Y6GXB3"
-};
+        let app, db, fbReady = false;
+        let entries = [];
+        let deletedEntry = null;
+        let undoTO = null;
+        let curPage = 'dashboard';
+        let sortF = 'date';
+        let sortD = 'desc';
+        let dcePg = 1;
+        const PER_PG = 15;
+        const chartRefs = {};
 
-var db = null;
-var fbReady = false;
-var fbLib = null;
-var analytics = null;
+        function pad2(n) { return String(n).padStart(2, '0'); }
 
-var transactions = [];
-var deletedTx = null;
-var undoTO = null;
-var curPage = "dashboard";
-var sortF = "date";
-var sortD = "desc";
-var txPg = 1;
-var PER_PG = 15;
-var chartRefs = {};
+        function ymdFromDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
+        function todayStr() { return ymdFromDate(new Date()); }
 
-function ymdFromDate(d) {
-  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
-}
-
-function todayStr() {
-  return ymdFromDate(new Date());
-}
-
-function normalizeYMD(value) {
-  if (!value) return todayStr();
-
-  if (value instanceof Date && !isNaN(value)) {
-    return ymdFromDate(value);
-  }
-
-  var s = String(value).trim();
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-
-  var dmy = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (dmy) return dmy[3] + "-" + dmy[2] + "-" + dmy[1];
-
-  var iso = s.match(/^(\d{4}-\d{2}-\d{2})T/);
-  if (iso) return iso[1];
-
-  var dt = new Date(s);
-  if (!isNaN(dt)) return ymdFromDate(dt);
-
-  return todayStr();
-}
-
-function fmtDate(value) {
-  var ymd = normalizeYMD(value);
-  var parts = ymd.split("-");
-  if (parts.length !== 3) return "";
-  return parts[2] + "/" + parts[1] + "/" + parts[0];
-}
-
-function money(n) {
-  return "₹" + (Number(n) || 0).toFixed(2);
-}
-
-function escH(s) {
-  var d = document.createElement("div");
-  d.textContent = s == null ? "" : String(s);
-  return d.innerHTML;
-}
-
-function safeArray(v) {
-  return Array.isArray(v) ? v : [];
-}
-
-function normalizeTransaction(t) {
-  var tx = t && typeof t === "object" ? t : {};
-  return {
-    id: tx.id || generateId(),
-    amount: Number(tx.amount) || 0,
-    date: normalizeYMD(tx.date),
-    method: tx.method === "UPI" ? "UPI" : "Cash",
-    type: tx.type === "Expense" ? "Expense" : "Income",
-    description: String(tx.description || "").trim(),
-    createdAt: tx.createdAt || new Date().toISOString()
-  };
-}
-
-function txsBetween(from, to) {
-  var f = normalizeYMD(from);
-  var t = normalizeYMD(to);
-  return transactions.filter(function (x) {
-    return x.date >= f && x.date <= t;
-  });
-}
-
-function statsOf(arr) {
-  arr = safeArray(arr);
-  var inc = arr.filter(function (t) { return t.type === "Income"; }).reduce(function (s, t) { return s + (Number(t.amount) || 0); }, 0);
-  var exp = arr.filter(function (t) { return t.type === "Expense"; }).reduce(function (s, t) { return s + (Number(t.amount) || 0); }, 0);
-  return { income: inc, expense: exp, profit: inc - exp, count: arr.length };
-}
-
-function generateId() {
-  return "tx_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
-}
-
-function getWeekRange() {
-  var now = new Date();
-  var dow = now.getDay();
-  var mon = new Date(now);
-  mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-  var sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6);
-  return { from: ymdFromDate(mon), to: ymdFromDate(sun) };
-}
-
-function getMonthRange() {
-  var now = new Date();
-  return { from: now.getFullYear() + "-" + pad2(now.getMonth() + 1) + "-01", to: todayStr() };
-}
-
-function getYearRange() {
-  var now = new Date();
-  return { from: now.getFullYear() + "-01-01", to: todayStr() };
-}
-
-function getRange(period, cf, ct) {
-  switch (period) {
-    case "daily":
-      return { from: todayStr(), to: todayStr() };
-    case "weekly":
-      return getWeekRange();
-    case "monthly":
-      return getMonthRange();
-    case "yearly":
-      return getYearRange();
-    case "custom":
-      return { from: normalizeYMD(cf || todayStr()), to: normalizeYMD(ct || todayStr()) };
-    default:
-      return { from: todayStr(), to: todayStr() };
-  }
-}
-
-function getFB() {
-  return window.firebaseExports || null;
-}
-
-function updateFBUI(ready) {
-  var dot = document.getElementById("fbDot");
-  var txt = document.getElementById("fbText");
-  var cloudEl = document.getElementById("setCloud");
-
-  if (dot) dot.className = "status-dot " + (ready ? "online" : "offline");
-  if (txt) txt.textContent = ready ? "Firebase Connected" : "Local Storage Only";
-
-  if (cloudEl) {
-    cloudEl.innerHTML = ready
-      ? "✅ <strong>Firestore Active</strong><br><small style=\"color:var(--text3);\">Cloud sync enabled</small>"
-      : "⚠️ <strong>Using Local Storage</strong><br><small style=\"color:var(--text3);\">Add Firebase config for cloud sync</small>";
-  }
-}
-
-function toast(msg, type) {
-  var c = document.getElementById("toastCtr");
-  if (!c) return;
-
-  var t = document.createElement("div");
-  t.className = "toast " + (type === "ok" ? "ok" : type === "err" ? "err" : "");
-  t.textContent = msg;
-  c.appendChild(t);
-
-  setTimeout(function () {
-    t.style.animation = "toastOut 0.26s ease forwards";
-    setTimeout(function () { t.remove(); }, 260);
-  }, 2500);
-}
-
-function lsGet(k) {
-  try {
-    var v = localStorage.getItem(k);
-    return v ? JSON.parse(v) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-function lsSet(k, v) {
-  try {
-    localStorage.setItem(k, JSON.stringify(v));
-  } catch (e) {}
-}
-
-function destroyCh(k) {
-  if (chartRefs[k]) {
-    try { chartRefs[k].destroy(); } catch (e) {}
-    chartRefs[k] = null;
-  }
-}
-
-function createTradingChart(ctx, labels, datasets, mode) {
-  var chart = new Chart(ctx, {
-    type: "line",
-    data: { labels: labels, datasets: datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: {
-          display: mode !== "main" ? true : true,
-          position: "top",
-          labels: {
-            color: "#535766",
-            usePointStyle: true,
-            pointStyle: "line",
-            padding: 16,
-            font: { size: 10, family: "Inter,system-ui,sans-serif" }
-          }
-        },
-        tooltip: {
-          backgroundColor: "#fff",
-          titleColor: "#1b1e27",
-          bodyColor: "#535766",
-          borderColor: "#e0e3e8",
-          borderWidth: 1,
-          cornerRadius: 8,
-          padding: 10,
-          displayColors: true,
-          titleFont: { size: 10, weight: "600" },
-          bodyFont: { size: 9 }
+        function normalizeYMD(value) {
+            if (!value) return todayStr();
+            if (value instanceof Date && !isNaN(value)) return ymdFromDate(value);
+            let s = String(value).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            let dmy = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (dmy) return dmy[3] + '-' + dmy[2] + '-' + dmy[1];
+            let dt = new Date(s);
+            if (!isNaN(dt)) return ymdFromDate(dt);
+            return todayStr();
         }
-      },
-      scales: {
-        x: {
-          ticks: { color: "#a8acb6", maxTicksLimit: mode === "main" ? 8 : 10, font: { size: 8 } },
-          grid: { display: false, drawBorder: true, lineWidth: 0.5 },
-          border: { display: true, color: "#e8eaef", width: 0.6 }
-        },
-        y: {
-          ticks: {
-            color: "#a8acb6",
-            font: { size: 8 },
-            callback: function (v) { return "₹" + v; },
-            maxTicksLimit: 6
-          },
-          grid: { color: "rgba(240,241,244,0.9)", lineWidth: 0.5 },
-          border: { display: true, color: "#e8eaef", width: 0.6 },
-          beginAtZero: true
+
+        function fmtDate(value) {
+            let ymd = normalizeYMD(value);
+            let parts = ymd.split('-');
+            if (parts.length !== 3) return '';
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
         }
-      }
-    }
-  });
 
-  return chart;
-}
+        function money(n) { return '₹' + (Number(n) || 0).toFixed(2); }
 
-function renderMainChart() {
-  var now = new Date();
-  var days = [];
+        function escH(s) { let d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s); return d.innerHTML; }
 
-  for (var i = 29; i >= 0; i--) {
-    var d = new Date(now);
-    d.setDate(d.getDate() - i);
-    var ds = ymdFromDate(d);
-    var st = statsOf(txsBetween(ds, ds));
-    days.push({ date: ds, income: st.income, expense: st.expense, profit: st.profit });
-  }
+        function generateId() { return 'dce_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9); }
 
-  destroyCh("mainChart");
-  var canvas = document.getElementById("mainChart");
-  if (!canvas) return;
+        function entriesBetween(from, to) {
+            let f = normalizeYMD(from),
+                t = normalizeYMD(to);
+            return entries.filter(x => x.date >= f && x.date <= t);
+        }
 
-  var ctx = canvas.getContext("2d");
-  var gIn = ctx.createLinearGradient(0, 0, 0, 320);
-  gIn.addColorStop(0, "rgba(13,158,83,0.16)");
-  gIn.addColorStop(1, "rgba(13,158,83,0.00)");
+        function statsOf(arr) {
+            arr = Array.isArray(arr) ? arr : [];
+            let totalCust = arr.reduce((s, e) => s + (Number(e.customerAmount) || 0), 0);
+            let totalExp = arr.reduce((s, e) => s + (Number(e.expenseAmount) || 0), 0);
+            let totalProfit = arr.reduce((s, e) => s + (Number(e.profit) || 0), 0);
+            let paid = arr.filter(e => e.status === 'Paid');
+            let partial = arr.filter(e => e.status === 'Partial');
+            let notpaid = arr.filter(e => e.status === 'Not Paid');
+            return {
+                custAmt: totalCust,
+                expense: totalExp,
+                profit: totalProfit,
+                count: arr.length,
+                paidCount: paid.length,
+                paidExpense: paid.reduce((s, e) => s + (Number(e.expenseAmount) || 0), 0),
+                paidCust: paid.reduce((s, e) => s + (Number(e.customerAmount) || 0), 0),
+                partialCount: partial.length,
+                partialExpense: partial.reduce((s, e) => s + (Number(e.expenseAmount) || 0), 0),
+                partialCust: partial.reduce((s, e) => s + (Number(e.customerAmount) || 0), 0),
+                notpaidCount: notpaid.length,
+                notpaidCust: notpaid.reduce((s, e) => s + (Number(e.customerAmount) || 0), 0),
+            };
+        }
 
-  var gEx = ctx.createLinearGradient(0, 0, 0, 320);
-  gEx.addColorStop(0, "rgba(229,69,69,0.12)");
-  gEx.addColorStop(1, "rgba(229,69,69,0.00)");
+        function getWeekRange() {
+            let now = new Date();
+            let dow = now.getDay();
+            let mon = new Date(now);
+            mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+            let sun = new Date(mon);
+            sun.setDate(mon.getDate() + 6);
+            return { from: ymdFromDate(mon), to: ymdFromDate(sun) };
+        }
 
-  var gPr = ctx.createLinearGradient(0, 0, 0, 320);
-  gPr.addColorStop(0, "rgba(63,110,240,0.14)");
-  gPr.addColorStop(1, "rgba(63,110,240,0.00)");
+        function getMonthRange() { let now = new Date(); return { from: now.getFullYear() + '-' + pad2(now.getMonth() +
+                1) + '-01', to: todayStr() }; }
 
-  chartRefs.mainChart = createTradingChart(canvas, days.map(function (d) { return fmtDate(d.date); }), [
-    {
-      label: "Income",
-      data: days.map(function (d) { return d.income; }),
-      borderColor: "#15b865",
-      backgroundColor: gIn,
-      fill: true,
-      tension: 0.48,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      borderWidth: 1.8
-    },
-    {
-      label: "Expense",
-      data: days.map(function (d) { return d.expense; }),
-      borderColor: "#f06060",
-      backgroundColor: gEx,
-      fill: true,
-      tension: 0.48,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      borderWidth: 1.8
-    },
-    {
-      label: "Profit",
-      data: days.map(function (d) { return d.profit; }),
-      borderColor: "#3f6ef0",
-      backgroundColor: gPr,
-      fill: true,
-      tension: 0.48,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      borderDash: [5, 3],
-      borderWidth: 1.9
-    }
-  ], "main");
-}
+        function getYearRange() { let now = new Date(); return { from: now.getFullYear() + '-01-01', to: todayStr() }; }
 
-function renderAnalytics() {
-  var now = new Date();
-  var d60 = [];
+        function getRange(period, cf, ct) {
+            switch (period) {
+                case 'daily':
+                    return { from: todayStr(), to: todayStr() };
+                case 'weekly':
+                    return getWeekRange();
+                case 'monthly':
+                    return getMonthRange();
+                case 'yearly':
+                    return getYearRange();
+                case 'custom':
+                    return { from: normalizeYMD(cf || todayStr()), to: normalizeYMD(ct || todayStr()) };
+                default:
+                    return { from: todayStr(), to: todayStr() };
+            }
+        }
 
-  for (var i = 59; i >= 0; i--) {
-    var d = new Date(now);
-    d.setDate(d.getDate() - i);
-    var ds = ymdFromDate(d);
-    var st = statsOf(txsBetween(ds, ds));
-    d60.push({ date: ds, income: st.income, expense: st.expense, profit: st.profit });
-  }
+        function updateFBUI(ready) {
+            let dot = document.getElementById('fbDot'),
+                txt = document.getElementById('fbText'),
+                el = document.getElementById('setCloud');
+            if (dot) dot.className = 'status-dot ' + (ready ? 'online' : 'offline');
+            if (txt) txt.textContent = ready ? 'Firestore Connected' : 'Offline';
+            if (el) el.innerHTML = ready ?
+                '✅ <strong>Firestore Active</strong><br><small style="color:var(--text3);">kalopsia-0404 • Real-time sync</small>' :
+                '❌ <strong>Not Connected</strong><br><small style="color:var(--text3);">Check Firebase config</small>';
+        }
 
-  destroyCh("aLine");
-  var al = document.getElementById("aLine");
-  if (al) {
-    var alCtx = al.getContext("2d");
-    var g1 = alCtx.createLinearGradient(0, 0, 0, 320);
-    g1.addColorStop(0, "rgba(13,158,83,0.12)");
-    g1.addColorStop(1, "rgba(13,158,83,0.00)");
+        function toast(msg, type) {
+            let c = document.getElementById('toastCtr');
+            if (!c) return;
+            let t = document.createElement('div');
+            t.className = 'toast ' + (type === 'ok' ? 'ok' : 'err');
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => { t.style.animation = 'toastOut 0.26s ease forwards';
+                setTimeout(() => t.remove(), 260); }, 2500);
+        }
 
-    var g2 = alCtx.createLinearGradient(0, 0, 0, 320);
-    g2.addColorStop(0, "rgba(229,69,69,0.10)");
-    g2.addColorStop(1, "rgba(229,69,69,0.00)");
+        function destroyCh(k) { if (chartRefs[k]) { try { chartRefs[k].destroy(); } catch (e) {} chartRefs[k] =
+            null; } }
 
-    chartRefs.aLine = createTradingChart(al, d60.filter(function (_, i) { return i % 4 === 0; }).map(function (d) {
-      return fmtDate(d.date);
-    }), [
-      {
-        label: "Income",
-        data: d60.map(function (d) { return d.income; }),
-        borderColor: "#15b865",
-        backgroundColor: g1,
-        fill: true,
-        tension: 0.48,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        borderWidth: 1.7
-      },
-      {
-        label: "Expense",
-        data: d60.map(function (d) { return d.expense; }),
-        borderColor: "#f06060",
-        backgroundColor: g2,
-        fill: true,
-        tension: 0.48,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        borderWidth: 1.7
-      }
-    ], "analytics");
-  }
-
-  destroyCh("aBar");
-  var ab = document.getElementById("aBar");
-  if (ab) {
-    var weeks = [];
-    for (var w = 7; w >= 0; w--) {
-      var ed = new Date(now);
-      ed.setDate(ed.getDate() - w * 7);
-      var sd = new Date(ed);
-      sd.setDate(sd.getDate() - 6);
-      weeks.push({
-        label: "W" + (8 - w),
-        profit: statsOf(txsBetween(ymdFromDate(sd), ymdFromDate(ed))).profit
-      });
+        function createTradingChart(canvas, labels, datasets) {
+            return new Chart(canvas, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top', labels: { color: '#545868', usePointStyle: true,
+                                padding: 16, font: { size: 10 } } }, tooltip: { backgroundColor: '#fff',
+                            titleColor: '#1b1e28', bodyColor: '#545868', borderColor: '#e1e4ea',
+                            borderWidth: 1, cornerRadius: 8, padding: 10 } },
+                    scales: { x: { ticks: { color: '#a9adb8', maxTicksLimit: 8, font: { size: 8 } },
+                            grid: { display: false }, border: { display: true, color: '#e8eaef',
+                            width: 0.6 } }, y: { ticks: { color: '#a9adb8', font: { size: 8 },
+                            callback: v => '₹' + v, maxTicksLimit: 6 },
+                        grid: { color: 'rgba(240,241,244,0.9)', lineWidth: 0.5 },
+                    border: { display: true, color: '#e8eaef', width: 0.6 }, beginAtZero: true } }
+            }
+        });
     }
 
-    var abCtx = ab.getContext("2d");
-    var gP = abCtx.createLinearGradient(0, 0, 0, 280);
-    gP.addColorStop(0, "rgba(63,110,240,0.16)");
-    gP.addColorStop(1, "rgba(63,110,240,0.00)");
-
-    chartRefs.aBar = createTradingChart(ab, weeks.map(function (x) { return x.label; }), [
-      {
-        label: "Weekly Profit",
-        data: weeks.map(function (x) { return x.profit; }),
-        borderColor: "#3f6ef0",
-        backgroundColor: gP,
-        fill: true,
-        tension: 0.46,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        borderWidth: 1.8
-      }
-    ], "analytics");
-  }
-
-  var ts = statsOf(transactions);
-  var aSummary = document.getElementById("aSummary");
-  if (aSummary) {
-    aSummary.innerHTML =
-      '<div style="display:grid;gap:0.45rem;">' +
-      '<div style="display:flex;justify-content:space-between;padding:0.45rem 0.65rem;background:var(--surface2);border-radius:7px;"><span>Total Income</span><strong style="color:var(--green);">' + money(ts.income) + '</strong></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:0.45rem 0.65rem;background:var(--surface2);border-radius:7px;"><span>Total Expense</span><strong style="color:var(--red);">' + money(ts.expense) + '</strong></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:0.45rem 0.65rem;background:var(--surface2);border-radius:7px;"><span>Net Profit</span><strong style="color:var(--blue);">' + money(ts.profit) + '</strong></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:0.45rem 0.65rem;background:var(--surface2);border-radius:7px;"><span>Transactions</span><strong>' + ts.count + '</strong></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:0.45rem 0.65rem;background:var(--surface2);border-radius:7px;"><span>Avg Value</span><strong>' + money(ts.count > 0 ? ((ts.income + ts.expense) / ts.count) : 0) + '</strong></div>' +
-      "</div>";
-  }
-}
-
-async function initFB() {
-  fbLib = getFB();
-  if (!fbLib || !firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) {
-    updateFBUI(false);
-    return false;
-  }
-
-  try {
-    if (!window.__shopledgerFirebaseApp) {
-      window.__shopledgerFirebaseApp = fbLib.initializeApp(firebaseConfig);
+    function renderMainChart() {
+        let now = new Date(),
+            days = [];
+        for (let i = 29; i >= 0; i--) { let d = new Date(now);
+            d.setDate(d.getDate() - i); let ds = ymdFromDate(d); let st = statsOf(entriesBetween(ds, ds));
+            days.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit }); }
+        destroyCh('mainChart');
+        let canvas = document.getElementById('mainChart');
+        if (!canvas) return;
+        let ctx = canvas.getContext('2d');
+        let g1 = ctx.createLinearGradient(0, 0, 0, 320);
+        g1.addColorStop(0, 'rgba(229,69,69,0.14)');
+        g1.addColorStop(1, 'rgba(229,69,69,0.0)');
+        let g2 = ctx.createLinearGradient(0, 0, 0, 320);
+        g2.addColorStop(0, 'rgba(13,158,83,0.14)');
+        g2.addColorStop(1, 'rgba(13,158,83,0.0)');
+        let g3 = ctx.createLinearGradient(0, 0, 0, 320);
+        g3.addColorStop(0, 'rgba(63,110,240,0.12)');
+        g3.addColorStop(1, 'rgba(63,110,240,0.0)');
+        chartRefs['mainChart'] = createTradingChart(canvas, days.map(d => fmtDate(d.date)), [
+            { label: 'Expenses', data: days.map(d => d.expense), borderColor: '#f06060',
+                backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5,
+                borderWidth: 1.8 },
+            { label: 'Recovery', data: days.map(d => d.custAmt), borderColor: '#15b865',
+                backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5,
+                borderWidth: 1.8 },
+            { label: 'Net', data: days.map(d => d.profit), borderColor: '#3f6ef0', backgroundColor: g3,
+                fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5, borderDash: [5, 3],
+                borderWidth: 1.9 }
+        ]);
     }
 
-    var app = window.__shopledgerFirebaseApp;
-    db = fbLib.getFirestore(app);
-
-    try {
-      analytics = fbLib.getAnalytics(app);
-    } catch (e) {
-      analytics = null;
+    function renderAnalytics() {
+        let now = new Date(),
+            d60 = [];
+        for (let i = 59; i >= 0; i--) { let d = new Date(now);
+            d.setDate(d.getDate() - i); let ds = ymdFromDate(d); let st = statsOf(entriesBetween(ds, ds));
+            d60.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit }); }
+        destroyCh('aLine');
+        let al = document.getElementById('aLine');
+        if (al) {
+            let ctx = al.getContext('2d');
+            let g1 = ctx.createLinearGradient(0, 0, 0, 310);
+            g1.addColorStop(0, 'rgba(229,69,69,0.10)');
+            g1.addColorStop(1, 'rgba(229,69,69,0.0)');
+            let g2 = ctx.createLinearGradient(0, 0, 0, 310);
+            g2.addColorStop(0, 'rgba(13,158,83,0.10)');
+            g2.addColorStop(1, 'rgba(13,158,83,0.0)');
+            chartRefs['aLine'] = createTradingChart(al, d60.filter((_, i) => i % 4 === 0).map(d => fmtDate(d.date)), [
+                { label: 'Expenses', data: d60.map(d => d.expense), borderColor: '#f06060',
+                    backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 4,
+                    borderWidth: 1.7 },
+                { label: 'Recovery', data: d60.map(d => d.custAmt), borderColor: '#15b865',
+                    backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 4,
+                    borderWidth: 1.7 }
+            ]);
+        }
+        destroyCh('aBar');
+        let ab = document.getElementById('aBar');
+        if (ab) {
+            let weeks = [];
+            for (let w = 7; w >= 0; w--) { let ed = new Date(now);
+                ed.setDate(ed.getDate() - w * 7); let sd = new Date(ed);
+                sd.setDate(sd.getDate() - 6);
+                weeks.push({ label: 'W' + (8 - w), profit: statsOf(entriesBetween(ymdFromDate(sd), ymdFromDate(
+                        ed))).profit }); }
+            let ctx = ab.getContext('2d');
+            let gP = ctx.createLinearGradient(0, 0, 0, 260);
+            gP.addColorStop(0, 'rgba(63,110,240,0.14)');
+            gP.addColorStop(1, 'rgba(63,110,240,0.0)');
+            chartRefs['aBar'] = createTradingChart(ab, weeks.map(w => w.label), [
+                { label: 'Weekly Net', data: weeks.map(w => w.profit), borderColor: '#3f6ef0',
+                    backgroundColor: gP, fill: true, tension: 0.46, pointRadius: 0, pointHoverRadius: 4,
+                    borderWidth: 1.8 }
+            ]);
+        }
+        let ts = statsOf(entries);
+        let el = document.getElementById('aSummary');
+        if (el) el.innerHTML =
+            '<div style="display:grid;gap:0.4rem;">' +
+            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Total Expenses</span><strong style="color:var(--red);">' +
+            money(ts.expense) + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Total Recovery</span><strong style="color:var(--green);">' +
+            money(ts.custAmt) + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Net Profit</span><strong style="color:var(--accent);">' +
+            money(ts.profit) + '</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>✅ Paid</span><strong style="color:var(--green);">' +
+            ts.paidCount + ' entries</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>🟡 Partial</span><strong style="color:var(--orange);">' +
+            ts.partialCount + ' entries</strong></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>🔴 Not Paid</span><strong style="color:var(--red);">' +
+            ts.notpaidCount + ' entries</strong></div>' + '</div>';
     }
 
-    fbReady = true;
-    window.db = db;
-    window.firebaseDb = db;
-    window.firebaseModules = fbLib;
-    window.firebaseAnalytics = analytics;
-    updateFBUI(true);
-    return true;
-  } catch (e) {
-    console.warn("Firebase init error:", e);
-    fbReady = false;
-    db = null;
-    window.db = null;
-    updateFBUI(false);
-    return false;
-  }
-}
-
-async function saveAll() {
-  lsSet("shopledger_tx", transactions);
-
-  if (!fbReady || !db || !fbLib) return;
-
-  try {
-    var batch = fbLib.writeBatch(db);
-    var snapshot = await fbLib.getDocs(fbLib.collection(db, "transactions"));
-
-    snapshot.forEach(function (d) {
-      batch.delete(d.ref);
-    });
-
-    transactions.forEach(function (t, i) {
-      var ref = fbLib.doc(db, "transactions", t.id || ("tx_" + i));
-      batch.set(ref, t);
-    });
-
-    await batch.commit();
-  } catch (e) {
-    console.warn("Firebase save error:", e);
-  }
-}
-
-async function loadAll() {
-  var local = lsGet("shopledger_tx") || [];
-  transactions = local.map(normalizeTransaction);
-
-  if (!fbReady || !db || !fbLib) return;
-
-  try {
-    var q = fbLib.query(
-      fbLib.collection(db, "transactions"),
-      fbLib.orderBy("date", "desc")
-    );
-
-    var snapshot = await fbLib.getDocs(q);
-    transactions = snapshot.docs.map(function (d) {
-      return normalizeTransaction({ id: d.id, ...d.data() });
-    });
-
-    lsSet("shopledger_tx", transactions);
-  } catch (e) {
-    console.warn("Firebase load error:", e);
-  }
-}
-
-function navTo(p) {
-  curPage = p;
-  document.querySelectorAll(".page").forEach(function (x) { x.classList.remove("active"); });
-  var pg = document.getElementById("page-" + p);
-  if (pg) pg.classList.add("active");
-
-  document.querySelectorAll(".sidebar-nav li a").forEach(function (a) { a.classList.remove("active"); });
-  var link = document.querySelector('.sidebar-nav li a[data-page="' + p + '"]');
-  if (link) link.classList.add("active");
-
-  var titles = {
-    dashboard: "📊 Dashboard",
-    add: "➕ Add Transaction",
-    transactions: "📝 Transactions",
-    reports: "📄 Reports",
-    analytics: "📈 Analytics",
-    export: "📥 Export",
-    settings: "⚙️ Settings"
-  };
-  var titleEl = document.getElementById("pageTitle");
-  if (titleEl) titleEl.textContent = titles[p] || "ShopLedger";
-  closeSidebar();
-  refreshPage(p);
-}
-
-function toggleSidebar() {
-  var sidebar = document.getElementById("sidebar");
-  var overlay = document.getElementById("sidebarOverlay");
-  if (sidebar) sidebar.classList.toggle("open");
-  if (overlay) overlay.classList.toggle("show");
-}
-
-function closeSidebar() {
-  var sidebar = document.getElementById("sidebar");
-  var overlay = document.getElementById("sidebarOverlay");
-  if (sidebar) sidebar.classList.remove("open");
-  if (overlay) overlay.classList.remove("show");
-}
-
-function refreshPage(p) {
-  switch (p) {
-    case "dashboard":
-      updateDashboard();
-      break;
-    case "add":
-      var dt = document.getElementById("txDt");
-      if (dt) dt.value = todayStr();
-      break;
-    case "transactions":
-      renderTxTable();
-      break;
-    case "reports":
-      var rp = document.getElementById("rptPeriod");
-      if (rp) rp.value = "monthly";
-      toggleRptCustom();
-      genReport();
-      break;
-    case "analytics":
-      renderAnalytics();
-      break;
-    case "export":
-      updateExpPreview();
-      break;
-    case "settings":
-      updateSettings();
-      break;
-  }
-}
-
-function handleAddTx(e) {
-  e.preventDefault();
-
-  var editId = (document.getElementById("txEditId") || {}).value || "";
-  var amountEl = document.getElementById("txAmt");
-  var dateEl = document.getElementById("txDt");
-  var methodEl = document.getElementById("txMthd");
-  var typeEl = document.getElementById("txTyp");
-  var descEl = document.getElementById("txDesc");
-
-  var tx = normalizeTransaction({
-    id: editId || generateId(),
-    amount: amountEl ? amountEl.value : 0,
-    date: dateEl ? dateEl.value : todayStr(),
-    method: methodEl ? methodEl.value : "Cash",
-    type: typeEl ? typeEl.value : "Income",
-    description: descEl ? descEl.value : "",
-    createdAt: editId ? (transactions.find(function (t) { return t.id === editId; }) || {}).createdAt || new Date().toISOString() : new Date().toISOString()
-  });
-
-  if (!tx.amount || !tx.date || !tx.method || !tx.type || !tx.description) {
-    toast("Please fill all fields!", "err");
-    return;
-  }
-
-  if (editId) {
-    var idx = transactions.findIndex(function (t) { return t.id === editId; });
-    if (idx >= 0) transactions[idx] = tx;
-    toast("Transaction updated!", "ok");
-    cancelTxEdit();
-  } else {
-    transactions.unshift(tx);
-    toast("Transaction added!", "ok");
-  }
-
-  saveAll();
-  if (document.getElementById("txForm")) document.getElementById("txForm").reset();
-  if (dateEl) dateEl.value = todayStr();
-  if (document.getElementById("txEditId")) document.getElementById("txEditId").value = "";
-
-  if (curPage === "transactions") renderTxTable();
-  if (curPage === "dashboard") updateDashboard();
-  if (curPage === "reports") genReport();
-  if (curPage === "analytics") renderAnalytics();
-  if (curPage === "export") updateExpPreview();
-}
-
-function cancelTxEdit() {
-  var editId = document.getElementById("txEditId");
-  var btn = document.getElementById("txSubmitBtn");
-  var cancelBtn = document.getElementById("txCancelBtn");
-  var form = document.getElementById("txForm");
-  var dt = document.getElementById("txDt");
-
-  if (editId) editId.value = "";
-  if (btn) btn.textContent = "💾 Save Transaction";
-  if (cancelBtn) cancelBtn.style.display = "none";
-  if (form) form.reset();
-  if (dt) dt.value = todayStr();
-}
-
-function editTx(id) {
-  var tx = transactions.find(function (t) { return t.id === id; });
-  if (!tx) return;
-
-  if (document.getElementById("txAmt")) document.getElementById("txAmt").value = Number(tx.amount) || 0;
-  if (document.getElementById("txDt")) document.getElementById("txDt").value = normalizeYMD(tx.date);
-  if (document.getElementById("txMthd")) document.getElementById("txMthd").value = tx.method;
-  if (document.getElementById("txTyp")) document.getElementById("txTyp").value = tx.type;
-  if (document.getElementById("txDesc")) document.getElementById("txDesc").value = tx.description;
-  if (document.getElementById("txEditId")) document.getElementById("txEditId").value = tx.id;
-  if (document.getElementById("txSubmitBtn")) document.getElementById("txSubmitBtn").textContent = "✏️ Update Transaction";
-  if (document.getElementById("txCancelBtn")) document.getElementById("txCancelBtn").style.display = "inline-flex";
-
-  navTo("add");
-  setTimeout(function () {
-    var page = document.getElementById("page-add");
-    if (page) page.scrollIntoView({ behavior: "smooth" });
-  }, 100);
-}
-
-function deleteTx(id) {
-  var idx = transactions.findIndex(function (t) { return t.id === id; });
-  if (idx < 0) return;
-
-  deletedTx = transactions[idx];
-  transactions.splice(idx, 1);
-  saveAll();
-
-  if (curPage === "transactions") renderTxTable();
-  if (curPage === "dashboard") updateDashboard();
-  if (curPage === "reports") genReport();
-  if (curPage === "analytics") renderAnalytics();
-  if (curPage === "export") updateExpPreview();
-
-  showUndo();
-  toast("Transaction deleted", "err");
-}
-
-function showUndo() {
-  var bar = document.getElementById("undoBar");
-  if (!bar) return;
-  bar.style.display = "flex";
-  clearTimeout(undoTO);
-  undoTO = setTimeout(function () {
-    bar.style.display = "none";
-    deletedTx = null;
-  }, 6000);
-}
-
-function dismissUndo() {
-  var bar = document.getElementById("undoBar");
-  if (bar) bar.style.display = "none";
-  deletedTx = null;
-  clearTimeout(undoTO);
-}
-
-function undoDel() {
-  if (!deletedTx) return;
-  transactions.unshift(normalizeTransaction(deletedTx));
-  saveAll();
-  deletedTx = null;
-  if (curPage === "transactions") renderTxTable();
-  if (curPage === "dashboard") updateDashboard();
-  if (curPage === "reports") genReport();
-  if (curPage === "analytics") renderAnalytics();
-  if (curPage === "export") updateExpPreview();
-  var bar = document.getElementById("undoBar");
-  if (bar) bar.style.display = "none";
-  clearTimeout(undoTO);
-  toast("Transaction restored!", "ok");
-}
-
-function sortTx(field) {
-  if (sortF === field) sortD = sortD === "asc" ? "desc" : "asc";
-  else {
-    sortF = field;
-    sortD = "desc";
-  }
-  txPg = 1;
-  renderTxTable();
-}
-
-function getFilteredTx() {
-  var arr = transactions.slice();
-  var s = ((document.getElementById("txSearch") || {}).value || "").toLowerCase();
-  var ft = ((document.getElementById("txFType") || {}).value || "all");
-  var fm = ((document.getElementById("txFMeth") || {}).value || "all");
-  var ff = ((document.getElementById("txFFrom") || {}).value || "");
-  var fto = ((document.getElementById("txFTo") || {}).value || "");
-
-  if (s) {
-    arr = arr.filter(function (t) {
-      return (t.description || "").toLowerCase().includes(s) ||
-        (t.type || "").toLowerCase().includes(s) ||
-        (t.method || "").toLowerCase().includes(s) ||
-        String(t.amount || "").includes(s);
-    });
-  }
-  if (ft !== "all") arr = arr.filter(function (t) { return t.type === ft; });
-  if (fm !== "all") arr = arr.filter(function (t) { return t.method === fm; });
-  if (ff) arr = arr.filter(function (t) { return t.date >= normalizeYMD(ff); });
-  if (fto) arr = arr.filter(function (t) { return t.date <= normalizeYMD(fto); });
-
-  arr.sort(function (a, b) {
-    var va, vb;
-    if (sortF === "date") {
-      va = a.date || "";
-      vb = b.date || "";
-    } else if (sortF === "amount") {
-      va = Number(a.amount) || 0;
-      vb = Number(b.amount) || 0;
-    } else {
-      va = a.date || "";
-      vb = b.date || "";
+    async function initFB() {
+        try { app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            fbReady = true;
+            window._db = db;
+            updateFBUI(true); return true; } catch (e) { fbReady = false;
+            updateFBUI(false); return false; }
     }
-    if (va < vb) return sortD === "asc" ? -1 : 1;
-    if (va > vb) return sortD === "asc" ? 1 : -1;
-    return 0;
-  });
 
-  return arr;
-}
-
-function renderTxTable() {
-  var filtered = getFilteredTx();
-  var totalP = Math.max(1, Math.ceil(filtered.length / PER_PG));
-  if (txPg > totalP) txPg = totalP;
-  if (txPg < 1) txPg = 1;
-
-  var start = (txPg - 1) * PER_PG;
-  var items = filtered.slice(start, start + PER_PG);
-
-  var tbody = document.getElementById("txTbody");
-  if (tbody) {
-    tbody.innerHTML = items.map(function (t) {
-      return (
-        "<tr>" +
-        "<td>" + fmtDate(t.date) + "</td>" +
-        "<td><strong>" + money(t.amount) + "</strong></td>" +
-        "<td><span class=\"badge " + (t.type === "Income" ? "badge-in" : "badge-ex") + "\">" + t.type + "</span></td>" +
-        "<td><span class=\"badge " + (t.method === "Cash" ? "badge-cash" : "badge-upi") + "\">" + t.method + "</span></td>" +
-        "<td>" + escH(t.description) + "</td>" +
-        "<td>" +
-        "<button class=\"btn btn-ghost btn-xs\" onclick=\"editTx('" + t.id + "')\" title=\"Edit\">✏️</button>" +
-        "<button class=\"btn btn-ghost btn-xs\" onclick=\"deleteTx('" + t.id + "')\" title=\"Delete\" style=\"color:var(--red);\">🗑️</button>" +
-        "</td>" +
-        "</tr>"
-      );
-    }).join("");
-  }
-
-  var info = document.getElementById("txInfo");
-  if (info) {
-    info.textContent = filtered.length === 0
-      ? "No transactions found"
-      : "Showing " + (start + 1) + "-" + Math.min(start + PER_PG, filtered.length) + " of " + filtered.length + " transactions";
-  }
-
-  var pag = "";
-  pag += "<button " + (txPg === 1 ? "disabled" : "") + ' onclick="txPg=1;renderTxTable();">«</button>';
-  pag += "<button " + (txPg === 1 ? "disabled" : "") + ' onclick="txPg=Math.max(1,txPg-1);renderTxTable();">‹</button>';
-  for (var i = Math.max(1, txPg - 2); i <= Math.min(totalP, txPg + 2); i++) {
-    pag += '<button class="' + (i === txPg ? "active" : "") + '" onclick="txPg=' + i + ';renderTxTable();">' + i + "</button>";
-  }
-  pag += "<button " + (txPg === totalP ? "disabled" : "") + ' onclick="txPg=Math.min(' + totalP + ',txPg+1);renderTxTable();">›</button>';
-  pag += "<button " + (txPg === totalP ? "disabled" : "") + ' onclick="txPg=' + totalP + ';renderTxTable();">»</button>';
-
-  var txPag = document.getElementById("txPag");
-  if (txPag) txPag.innerHTML = pag;
-}
-
-function statCardHTML(label, value, cls) {
-  var icons = { income: "💰", expense: "💸", profit: "📊" };
-  return '<div class="stat-card sc-' + cls + '"><div class="sc-icon">' + (icons[cls] || "📋") + '</div><div class="sc-label">' + label + '</div><div class="sc-value">' + money(value) + "</div></div>";
-}
-
-function updateDashboard() {
-  var today = todayStr();
-  var week = getWeekRange();
-  var month = getMonthRange();
-  var sToday = statsOf(txsBetween(today, today));
-  var sWeek = statsOf(txsBetween(week.from, week.to));
-  var sMonth = statsOf(txsBetween(month.from, month.to));
-  var sTotal = statsOf(transactions);
-
-  var d1 = document.getElementById("statToday");
-  var d2 = document.getElementById("statWeek");
-  var d3 = document.getElementById("statMonth");
-  var d4 = document.getElementById("statTotal");
-
-  if (d1) d1.innerHTML = statCardHTML("Income", sToday.income, "income") + statCardHTML("Expense", sToday.expense, "expense") + statCardHTML("Profit", sToday.profit, "profit");
-  if (d2) d2.innerHTML = statCardHTML("Income", sWeek.income, "income") + statCardHTML("Expense", sWeek.expense, "expense") + statCardHTML("Profit", sWeek.profit, "profit");
-  if (d3) d3.innerHTML = statCardHTML("Income", sMonth.income, "income") + statCardHTML("Expense", sMonth.expense, "expense") + statCardHTML("Profit", sMonth.profit, "profit");
-  if (d4) d4.innerHTML = statCardHTML("Income", sTotal.income, "income") + statCardHTML("Expense", sTotal.expense, "expense") + statCardHTML("Profit", sTotal.profit, "profit");
-
-  var recent = transactions.slice(0, 6);
-  var recentTx = document.getElementById("recentTx");
-  if (recentTx) {
-    recentTx.innerHTML = recent.length ? recent.map(function (t) {
-      return (
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.42rem 0;border-bottom:1px solid #f4f5f7;">' +
-        '<div><strong>' + escH(t.description) + '</strong><br><small style="color:var(--text4);">' + fmtDate(t.date) + ' · ' + t.method + "</small></div>" +
-        '<span style="color:' + (t.type === "Income" ? "var(--green)" : "var(--red)") + ';font-weight:700;">' + (t.type === "Income" ? "+" : "-") + money(t.amount) + "</span>" +
-        "</div>"
-      );
-    }).join("") : '<p style="color:var(--text3);text-align:center;padding:1rem;">No transactions yet</p>';
-  }
-
-  renderMainChart();
-}
-
-function toggleRptCustom() {
-  var v = (document.getElementById("rptPeriod") || {}).value || "monthly";
-  var from = document.getElementById("rptFrom");
-  var to = document.getElementById("rptTo");
-  if (from) from.style.display = v === "custom" ? "inline-block" : "none";
-  if (to) to.style.display = v === "custom" ? "inline-block" : "none";
-}
-
-function genReport() {
-  var p = (document.getElementById("rptPeriod") || {}).value || "monthly";
-  var cf = (document.getElementById("rptFrom") || {}).value || "";
-  var ct = (document.getElementById("rptTo") || {}).value || "";
-  var range = getRange(p, cf, ct);
-  var txs = txsBetween(range.from, range.to);
-  var s = statsOf(txs);
-
-  var cashS = txs.filter(function (t) { return t.method === "Cash"; }).reduce(function (a, t) { return a + (Number(t.amount) || 0); }, 0);
-  var upiS = txs.filter(function (t) { return t.method === "UPI"; }).reduce(function (a, t) { return a + (Number(t.amount) || 0); }, 0);
-
-  var rptStatRow = document.getElementById("rptStatRow");
-  if (rptStatRow) {
-    rptStatRow.innerHTML =
-      statCardHTML("Income", s.income, "income") +
-      statCardHTML("Expense", s.expense, "expense") +
-      statCardHTML("Profit", s.profit, "profit") +
-      '<div class="stat-card"><div class="sc-icon" style="background:#f0f4ff;color:#3f6ef0;">📋</div><div class="sc-label">Transactions</div><div class="sc-value" style="color:#3f6ef0;">' + s.count + "</div></div>" +
-      '<div class="stat-card"><div class="sc-icon" style="background:var(--cashBg);color:var(--cash);">💵</div><div class="sc-label">Cash</div><div class="sc-value" style="color:var(--cash);">' + money(cashS) + "</div></div>" +
-      '<div class="stat-card"><div class="sc-icon" style="background:var(--upiBg);color:var(--upi);">📱</div><div class="sc-label">UPI</div><div class="sc-value" style="color:var(--upi);">' + money(upiS) + "</div></div>";
-  }
-
-  var rptTbody = document.getElementById("rptTbody");
-  if (rptTbody) {
-    rptTbody.innerHTML = txs.map(function (t) {
-      return (
-        "<tr>" +
-        "<td>" + fmtDate(t.date) + "</td>" +
-        "<td><strong>" + money(t.amount) + "</strong></td>" +
-        "<td><span class=\"badge " + (t.type === "Income" ? "badge-in" : "badge-ex") + "\">" + t.type + "</span></td>" +
-        "<td><span class=\"badge " + (t.method === "Cash" ? "badge-cash" : "badge-upi") + "\">" + t.method + "</span></td>" +
-        "<td>" + escH(t.description) + "</td>" +
-        "</tr>"
-      );
-    }).join("");
-  }
-}
-
-function printReport() {
-  var p = (document.getElementById("rptPeriod") || {}).value || "monthly";
-  var cf = (document.getElementById("rptFrom") || {}).value || "";
-  var ct = (document.getElementById("rptTo") || {}).value || "";
-  var range = getRange(p, cf, ct);
-  var txs = txsBetween(range.from, range.to);
-  var s = statsOf(txs);
-
-  var w = window.open("", "_blank", "width=800,height=600");
-  if (!w) {
-    toast("Popup blocked", "err");
-    return;
-  }
-
-  w.document.write(
-    "<html><head><title>ShopLedger Report</title><style>" +
-      "body{font-family:Inter,Arial,sans-serif;padding:20px;color:#1b1e27;background:#fff}" +
-      "h1{color:#3f6ef0;font-size:1.3rem}" +
-      "table{width:100%;border-collapse:collapse;margin-top:12px}" +
-      "th,td{border:1px solid #e0e3e8;padding:7px;text-align:left;font-size:0.8rem}" +
-      "th{background:#f8f9fb;font-weight:700}" +
-      ".sum{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}" +
-      ".sum div{background:#f8f9fb;padding:10px 16px;border-radius:9px;border:1px solid #eaecf1;font-size:0.82rem}" +
-    "</style></head><body>" +
-    "<h1>📊 ShopLedger Report</h1>" +
-    "<p style=\"color:#535766;font-size:0.8rem;\">Period: " + fmtDate(range.from) + " – " + fmtDate(range.to) + "</p>" +
-    '<div class="sum"><div><strong>Income:</strong> ' + money(s.income) + "</div><div><strong>Expense:</strong> " + money(s.expense) + "</div><div><strong>Profit:</strong> " + money(s.profit) + "</div><div><strong>Transactions:</strong> " + s.count + "</div></div>" +
-    "<table><thead><tr><th>Date</th><th>Amount</th><th>Type</th><th>Method</th><th>Description</th></tr></thead><tbody>" +
-    txs.map(function (t) {
-      return "<tr><td>" + fmtDate(t.date) + "</td><td>" + money(t.amount) + "</td><td>" + t.type + "</td><td>" + t.method + "</td><td>" + escH(t.description) + "</td></tr>";
-    }).join("") +
-    "</tbody></table></body></html>"
-  );
-  w.document.close();
-  w.print();
-}
-
-function getExpTxs() {
-  var p = (document.getElementById("expPeriod") || {}).value || "all";
-  if (p === "all") return transactions.slice();
-  var range = getRange(p, "", "");
-  return txsBetween(range.from, range.to);
-}
-
-function updateExpPreview() {
-  var txs = getExpTxs();
-  var s = statsOf(txs);
-  var expPreview = document.getElementById("expPreview");
-  if (expPreview) {
-    expPreview.innerHTML = '<div class="stat-row" style="max-width:480px;margin:0 auto;">' +
-      statCardHTML("Income", s.income, "income") +
-      statCardHTML("Expense", s.expense, "expense") +
-      statCardHTML("Count", s.count, "profit") +
-      "</div>";
-  }
-}
-
-function exportPDF() {
-  var txs = getExpTxs();
-  var s = statsOf(txs);
-  var jsPDF = window.jspdf && window.jspdf.jsPDF;
-  if (!jsPDF) {
-    toast("PDF library not loaded", "err");
-    return;
-  }
-
-  var docu = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  docu.setFontSize(16);
-  docu.setTextColor(27, 30, 39);
-  docu.text("ShopLedger Financial Report", 14, 20);
-  docu.setFontSize(8);
-  docu.setTextColor(83, 87, 102);
-  docu.text("Generated: " + new Date().toLocaleString("en-IN"), 14, 27);
-  docu.text("Income: " + money(s.income) + " | Expense: " + money(s.expense) + " | Profit: " + money(s.profit) + " | Transactions: " + s.count, 14, 34);
-
-  docu.autoTable({
-    startY: 40,
-    head: [["Date", "Amount", "Type", "Method", "Description"]],
-    body: txs.map(function (t) {
-      return [fmtDate(t.date), money(t.amount), t.type, t.method, t.description];
-    }),
-    styles: { fontSize: 7, cellPadding: 2.5, textColor: [27, 30, 39] },
-    headStyles: { fillColor: [63, 110, 240], textColor: [255, 255, 255] },
-    alternateRowStyles: { fillColor: [245, 247, 250] }
-  });
-
-  docu.save("shopledger-report.pdf");
-  toast("PDF exported!", "ok");
-}
-
-function exportExcel() {
-  if (!window.XLSX) {
-    toast("Excel library not loaded", "err");
-    return;
-  }
-
-  var txs = getExpTxs();
-  var data = txs.map(function (t) {
-    return { Date: fmtDate(t.date), Amount: Number(t.amount) || 0, Type: t.type, Method: t.method, Description: t.description };
-  });
-  var ws = XLSX.utils.json_to_sheet(data);
-  var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-  XLSX.writeFile(wb, "shopledger-data.xlsx");
-  toast("Excel exported!", "ok");
-}
-
-function updateSettings() {
-  var ts = statsOf(transactions);
-
-  var cloud = document.getElementById("setCloud");
-  if (cloud) {
-    cloud.innerHTML =
-      '<div style="display:grid;gap:0.45rem;">' +
-      '<div>☁️ <strong>Cloud Mode:</strong> ' + (fbReady ? "Firestore Active" : "Offline / Local Only") + "</div>" +
-      '<div>🔁 <strong>Sync Status:</strong> ' + (fbReady ? "Real-time sync enabled" : "Sync unavailable") + "</div>" +
-      '<div>🗂️ <strong>Collection:</strong> transactions</div>' +
-      "</div>";
-  }
-
-  var stats = document.getElementById("setStats");
-  if (stats) {
-    stats.innerHTML =
-      '<div style="display:grid;gap:0.3rem;">' +
-      "<div>📌 <strong>Total Transactions:</strong> " + ts.count + "</div>" +
-      "<div>💰 <strong>Total Income:</strong> " + money(ts.income) + "</div>" +
-      "<div>💸 <strong>Total Expense:</strong> " + money(ts.expense) + "</div>" +
-      "<div>📊 <strong>Net Profit:</strong> " + money(ts.profit) + "</div>" +
-      "<div>💾 <strong>Storage Size:</strong> ~" + (JSON.stringify(transactions).length / 1024).toFixed(1) + " KB</div>" +
-      "<div>🕐 <strong>Last Updated:</strong> " + new Date().toLocaleString("en-IN") + "</div>" +
-      "</div>";
-  }
-
-  var sys = document.getElementById("setSys");
-  if (sys) {
-    sys.innerHTML =
-      '<div style="display:grid;gap:0.3rem;">' +
-      "<div>📦 <strong>App Version:</strong> ShopLedger Pro v4.0</div>" +
-      "<div>☁️ <strong>Firebase Mode:</strong> " + (fbReady ? "Cloud + Local" : "Local Only") + "</div>" +
-      "<div>💻 <strong>Local Cache:</strong> Active</div>" +
-      "<div>🌐 <strong>Theme:</strong> Light Professional</div>" +
-      "</div>";
-  }
-}
-
-function backupJSON() {
-  var blob = new Blob([JSON.stringify(transactions, null, 2)], { type: "application/json" });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = "shopledger-backup-" + todayStr() + ".json";
-  a.click();
-  URL.revokeObjectURL(url);
-  toast("Backup downloaded!", "ok");
-}
-
-function restoreJSON(e) {
-  var file = e.target.files && e.target.files[0];
-  if (!file) return;
-
-  var reader = new FileReader();
-  reader.onload = function (ev) {
-    try {
-      var data = JSON.parse(ev.target.result);
-      if (!Array.isArray(data)) throw new Error("Invalid file");
-
-      if (confirm("Restore " + data.length + " transactions? All current data will be replaced.")) {
-        transactions = data.map(normalizeTransaction);
-        saveAll();
-        if (curPage === "transactions") renderTxTable();
-        if (curPage === "dashboard") updateDashboard();
-        if (curPage === "reports") genReport();
-        if (curPage === "analytics") renderAnalytics();
-        if (curPage === "export") updateExpPreview();
-        toast("Data restored!", "ok");
-      }
-    } catch (err) {
-      toast("Invalid backup file!", "err");
+    async function loadAllFromFirestore() {
+        if (!fbReady || !db) return;
+        try { let snap = await getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc')));
+            entries = snap.docs.map(d => ({ id: d.id, ...d.data() })); } catch (e) { console.warn('Load error:', e); }
     }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-}
 
-function clearAllData() {
-  if (!confirm("Delete ALL transaction data? This cannot be undone.")) return;
-  if (!confirm("FINAL WARNING: All data will be permanently erased. Continue?")) return;
+    async function saveSingleEntry(entry) {
+        if (!fbReady || !db) { toast('Firestore not connected!', 'err'); return false; }
+        try { await setDoc(doc(db, 'transactions', entry.id), { ...entry }); return true; } catch (e) { toast(
+                'Save failed', 'err'); return false; }
+    }
 
-  transactions = [];
-  saveAll();
+    async function deleteEntryFromFirestore(id) {
+        if (!fbReady || !db) return false;
+        try { await deleteDoc(doc(db, 'transactions', id)); return true; } catch (e) { return false; }
+    }
 
-  if (fbReady && db && fbLib) {
-    fbLib.getDocs(fbLib.collection(db, "transactions")).then(function (snapshot) {
-      var batch = fbLib.writeBatch(db);
-      snapshot.forEach(function (d) { batch.delete(d.ref); });
-      return batch.commit();
-    }).catch(function (e) {
-      console.warn("Firestore clear error:", e);
-    });
-  }
+    async function navTo(p) {
+        curPage = p;
+        document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+        let pg = document.getElementById('page-' + p);
+        if (pg) pg.classList.add('active');
+        document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
+        let link = document.querySelector('.sidebar-nav li a[data-page="' + p + '"]');
+        if (link) link.classList.add('active');
+        let titles = { dashboard: '📊 Dashboard', dce: '🏗️ Data Centre', reports: '📄 Reports',
+            analytics: '📈 Analytics', export: '📥 Export', settings: '⚙️ Settings' };
+        document.getElementById('pageTitle').textContent = titles[p] || 'Kalopsia - Chullikara';
+        closeSidebar();
+        await refreshPage(p);
+    }
 
-  if (curPage === "transactions") renderTxTable();
-  if (curPage === "dashboard") updateDashboard();
-  if (curPage === "reports") genReport();
-  if (curPage === "analytics") renderAnalytics();
-  if (curPage === "export") updateExpPreview();
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('show'); }
 
-  toast("All data cleared", "err");
-}
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('show'); }
 
-function updateLiveClock() {
-  var liveDate = document.getElementById("liveDate");
-  if (!liveDate) return;
+    async function refreshPage(p) {
+        switch (p) {
+            case 'dashboard':
+                updateDashboard();
+                break;
+            case 'dce':
+                document.getElementById('dceDt').value = todayStr();
+                setStatusUI('Paid');
+                updateDCESummary();
+                renderDCETable();
+                break;
+            case 'reports':
+                document.getElementById('rptPeriod').value = 'monthly';
+                toggleRptCustom();
+                genReport();
+                break;
+            case 'analytics':
+                renderAnalytics();
+                break;
+            case 'export':
+                updateExpPreview();
+                break;
+            case 'settings':
+                updateSettings();
+                break;
+        }
+    }
 
-  var now = new Date();
-  var datePart = fmtDate(todayStr());
-  var timePart = now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
-  liveDate.textContent = datePart + " · " + timePart;
-}
+    function setStatus(status) {
+        document.getElementById('dceStatus').value = status;
+        setStatusUI(status);
+    }
 
-async function init() {
-  await initFB();
-  await loadAll();
+    function setStatusUI(status) {
+        document.querySelectorAll('#statusSelector .status-chip').forEach(chip => {
+            chip.className = 'status-chip';
+            if (chip.dataset.status === status) {
+                if (status === 'Paid') chip.classList.add('selected-paid');
+                else if (status === 'Partial') chip.classList.add('selected-partial');
+                else chip.classList.add('selected-notpaid');
+            }
+        });
+        let expGroup = document.getElementById('dceExpenseGroup');
+        let mthdNotPaid = document.getElementById('dceMthdNotPaid');
+        if (status === 'Not Paid') {
+            if (expGroup) expGroup.style.display = 'none';
+            if (mthdNotPaid) mthdNotPaid.style.display = 'block';
+            document.getElementById('dceMthd').value = 'Not Paid';
+        } else {
+            if (expGroup) expGroup.style.display = 'flex';
+            if (mthdNotPaid) mthdNotPaid.style.display = 'none';
+            if (document.getElementById('dceMthd').value === 'Not Paid') document.getElementById('dceMthd').value =
+                'UPI';
+        }
+        document.getElementById('dceStatus').value = status;
+    }
 
-  var txDt = document.getElementById("txDt");
-  if (txDt) txDt.value = todayStr();
+    async function handleDCESubmit(e) {
+        e.preventDefault();
+        let editId = document.getElementById('dceEditId').value;
+        let status = document.getElementById('dceStatus').value;
+        let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
+        let expAmt = (status === 'Not Paid') ? 0 : (parseFloat(document.getElementById('dceExpAmt').value) || 0);
+        let profit = custAmt - expAmt;
+        let entry = {
+            id: editId || generateId(),
+            customerAmount: custAmt,
+            expenseAmount: expAmt,
+            date: document.getElementById('dceDt').value,
+            type: document.getElementById('dceTyp').value,
+            method: document.getElementById('dceMthd').value,
+            description: (document.getElementById('dceDesc').value || '').trim(),
+            status: status,
+            profit: profit,
+            createdAt: editId ? (entries.find(e => e.id === editId)?.createdAt || new Date().toISOString()) :
+                new Date().toISOString()
+        };
+        if (!entry.date || !entry.description) { toast('Please fill all required fields!', 'err'); return; }
+        if (editId) {
+            let idx = entries.findIndex(e => e.id === editId);
+            if (idx >= 0) entries[idx] = entry;
+            await saveSingleEntry(entry);
+            toast('Entry updated!', 'ok');
+            cancelDCEEdit();
+        } else {
+            entries.unshift(entry);
+            await saveSingleEntry(entry);
+            toast('Entry added!', 'ok');
+        }
+        document.getElementById('dceForm').reset();
+        document.getElementById('dceDt').value = todayStr();
+        document.getElementById('dceEditId').value = '';
+        setStatusUI('Paid');
+        document.getElementById('dceCustAmt').value = '0';
+        updateDCESummary();
+        renderDCETable();
+        if (curPage === 'dashboard') updateDashboard();
+    }
 
-  updateLiveClock();
-  setInterval(updateLiveClock, 30000);
+    function cancelDCEEdit() {
+        document.getElementById('dceEditId').value = '';
+        document.getElementById('dceSubmitBtn').textContent = '💾 Save Entry';
+        document.getElementById('dceCancelBtn').style.display = 'none';
+        document.getElementById('dceForm').reset();
+        document.getElementById('dceDt').value = todayStr();
+        document.getElementById('dceCustAmt').value = '0';
+        setStatusUI('Paid');
+    }
 
-  updateDashboard();
-  updateSettings();
-  updateExpPreview();
+    function editDCE(id) {
+        let entry = entries.find(e => e.id === id);
+        if (!entry) return;
+        document.getElementById('dceCustAmt').value = entry.customerAmount || 0;
+        document.getElementById('dceDt').value = entry.date;
+        document.getElementById('dceTyp').value = entry.type || 'Customer Payment';
+        document.getElementById('dceMthd').value = entry.method || 'UPI';
+        document.getElementById('dceDesc').value = entry.description || '';
+        document.getElementById('dceEditId').value = entry.id;
+        document.getElementById('dceSubmitBtn').textContent = '✏️ Update Entry';
+        document.getElementById('dceCancelBtn').style.display = 'inline-flex';
+        setStatusUI(entry.status || 'Paid');
+        if (entry.status !== 'Not Paid' && document.getElementById('dceExpAmt')) {
+            document.getElementById('dceExpAmt').value = entry.expenseAmount || 0;
+        }
+        navTo('dce');
+        setTimeout(() => document.getElementById('page-dce').scrollIntoView({ behavior: 'smooth' }), 100);
+    }
 
-  var rptSel = document.getElementById("rptPeriod");
-  if (rptSel) {
-    rptSel.addEventListener("change", function () {
-      toggleRptCustom();
-      genReport();
-    });
-  }
+    async function deleteDCE(id) {
+        let idx = entries.findIndex(e => e.id === id);
+        if (idx < 0) return;
+        deletedEntry = entries[idx];
+        entries.splice(idx, 1);
+        await deleteEntryFromFirestore(id);
+        updateDCESummary();
+        renderDCETable();
+        if (curPage === 'dashboard') updateDashboard();
+        showUndo();
+        toast('Entry deleted', 'err');
+    }
 
-  var expSel = document.getElementById("expPeriod");
-  if (expSel) expSel.addEventListener("change", updateExpPreview);
+    function showUndo() {
+        let bar = document.getElementById('undoBar');
+        if (!bar) return;
+        bar.style.display = 'flex';
+        clearTimeout(undoTO);
+        undoTO = setTimeout(() => { bar.style.display = 'none';
+            deletedEntry = null; }, 6000);
+    }
 
-  console.log("✅ ShopLedger Pro v4.0 ready");
-}
+    function dismissUndo() { document.getElementById('undoBar').style.display = 'none';
+        deletedEntry = null;
+        clearTimeout(undoTO); }
 
-window.navTo = navTo;
-window.toggleSidebar = toggleSidebar;
-window.closeSidebar = closeSidebar;
-window.handleAddTx = handleAddTx;
-window.cancelTxEdit = cancelTxEdit;
-window.editTx = editTx;
-window.deleteTx = deleteTx;
-window.undoDel = undoDel;
-window.dismissUndo = dismissUndo;
-window.sortTx = sortTx;
-window.renderTxTable = renderTxTable;
-window.toggleRptCustom = toggleRptCustom;
-window.genReport = genReport;
-window.printReport = printReport;
-window.updateExpPreview = updateExpPreview;
-window.exportPDF = exportPDF;
-window.exportExcel = exportExcel;
-window.backupJSON = backupJSON;
-window.restoreJSON = restoreJSON;
-window.clearAllData = clearAllData;
-window.updateSettings = updateSettings;
-window.updateDashboard = updateDashboard;
-window.renderAnalytics = renderAnalytics;
-window.txPg = txPg;
+    async function undoDel() {
+        if (!deletedEntry) return;
+        entries.unshift(deletedEntry);
+        await saveSingleEntry(deletedEntry);
+        deletedEntry = null;
+        updateDCESummary();
+        renderDCETable();
+        if (curPage === 'dashboard') updateDashboard();
+        document.getElementById('undoBar').style.display = 'none';
+        clearTimeout(undoTO);
+        toast('Entry restored!', 'ok');
+    }
 
-document.addEventListener("DOMContentLoaded", init);
+    function sortDCE(field) { if (sortF === field) sortD = sortD === 'asc' ? 'desc' : 'asc';
+        else { sortF = field;
+            sortD = 'desc'; } dcePg = 1;
+        renderDCETable(); }
+
+    function getFilteredDCE() {
+        let arr = [...entries];
+        let s = ((document.getElementById('dceSearch') || {}).value || '').toLowerCase();
+        let fs = ((document.getElementById('dceFStatus') || {}).value || 'all');
+        let ff = ((document.getElementById('dceFFrom') || {}).value || '');
+        let fto = ((document.getElementById('dceFTo') || {}).value || '');
+        if (s) arr = arr.filter(e => (e.description || '').toLowerCase().includes(s) || String(e.customerAmount || '')
+            .includes(s) || String(e.expenseAmount || '').includes(s));
+        if (fs !== 'all') arr = arr.filter(e => e.status === fs);
+        if (ff) arr = arr.filter(e => e.date >= normalizeYMD(ff));
+        if (fto) arr = arr.filter(e => e.date <= normalizeYMD(fto));
+        arr.sort((a, b) => {
+            let va, vb;
+            if (sortF === 'date') { va = a.date || '';
+                vb = b.date || ''; } else if (sortF === 'custAmt') { va = Number(a.customerAmount) || 0;
+                vb = Number(b.customerAmount) || 0; } else if (sortF === 'expAmt') { va = Number(a
+                    .expenseAmount) || 0;
+                vb = Number(b.expenseAmount) || 0; } else { va = Number(a.profit) || 0;
+                vb = Number(b.profit) || 0; }
+            if (va < vb) return sortD === 'asc' ? -1 : 1;
+            if (va > vb) return sortD === 'asc' ? 1 : -1;
+            return 0;
+        });
+        return arr;
+    }
+
+    function renderDCETable() {
+        let filtered = getFilteredDCE();
+        let totalP = Math.max(1, Math.ceil(filtered.length / PER_PG));
+        if (dcePg > totalP) dcePg = totalP;
+        if (dcePg < 1) dcePg = 1;
+        let start = (dcePg - 1) * PER_PG;
+        let items = filtered.slice(start, start + PER_PG);
+        let tbody = document.getElementById('dceTbody');
+        if (tbody) tbody.innerHTML = items.map(e => {
+            let statusCls = e.status === 'Paid' ? 'badge-paid' : e.status === 'Partial' ? 'badge-partial' :
+                'badge-notpaid';
+            let methodCls = e.method === 'Cash' ? 'badge-cash' : 'badge-upi';
+            let methodLabel = e.method === 'Cash' ? '💵 Cash' : e.method === 'Not Paid' ? '🚫 Not Paid' :
+                '📱 UPI';
+            return '<tr><td>' + fmtDate(e.date) + '</td><td><strong>' + money(e.customerAmount || 0) +
+                '</strong></td><td><strong>' + money(e.expenseAmount || 0) +
+                '</strong></td><td><strong style="color:' + ((e.profit || 0) >= 0 ? 'var(--green)' :
+                    'var(--red)') + ';">' + money(e.profit || 0) +
+                '</strong></td><td><span class="badge ' + statusCls + '">' + e.status +
+                '</span></td><td><span class="badge ' + methodCls + '">' + methodLabel +
+                '</span></td><td>' + escH(e.description || '') +
+                '</td><td><button class="btn btn-ghost btn-xs" onclick="window._editDCE(\'' + e.id +
+                '\')">✏️</button><button class="btn btn-ghost btn-xs" onclick="window._deleteDCE(\'' + e.id +
+                '\')" style="color:var(--red);">🗑️</button></td></tr>';
+        }).join('');
+        document.getElementById('dceInfo').textContent = filtered.length === 0 ? 'No entries' : 'Showing ' + (start +
+            1) + '-' + Math.min(start + PER_PG, filtered.length) + ' of ' + filtered.length;
+        let pag = '';
+        pag += '<button ' + (dcePg === 1 ? 'disabled' : '') + ' onclick="window._dcePage(1);">«</button>';
+        pag += '<button ' + (dcePg === 1 ? 'disabled' : '') +
+            ' onclick="window._dcePage(Math.max(1,dcePg-1));">‹</button>';
+        for (let i = Math.max(1, dcePg - 2); i <= Math.min(totalP, dcePg + 2); i++) pag += '<button class="' + (i ===
+            dcePg ? 'active' : '') + '" onclick="window._dcePage(' + i + ');">' + i + '</button>';
+        pag += '<button ' + (dcePg === totalP ? 'disabled' : '') +
+            ' onclick="window._dcePage(Math.min(' + totalP + ',dcePg+1));">›</button>';
+        pag += '<button ' + (dcePg === totalP ? 'disabled' : '') + ' onclick="window._dcePage(' + totalP +
+        ');">»</button>';
+        document.getElementById('dcePag').innerHTML = pag;
+    }
+
+    function updateDCESummary() {
+        let s = statsOf(entries);
+        let el = document.getElementById('dceSummaryCards');
+        if (el) el.innerHTML =
+            '<div class="stat-card sc-expense"><div class="sc-icon">💸</div><div class="sc-label">Total Expenses</div><div class="sc-value">' +
+            money(s.expense) + '</div></div>' +
+            '<div class="stat-card sc-pending"><div class="sc-icon">⏳</div><div class="sc-label">Not Paid</div><div class="sc-value">' +
+            s.notpaidCount + ' entries</div></div>' +
+            '<div class="stat-card sc-income"><div class="sc-icon">💰</div><div class="sc-label">Total Recovery</div><div class="sc-value">' +
+            money(s.custAmt) + '</div></div>' +
+            '<div class="stat-card sc-profit"><div class="sc-icon">📊</div><div class="sc-label">Net Profit</div><div class="sc-value">' +
+            money(s.profit) + '</div></div>';
+    }
+
+    function statCardHTML(label, value, cls) {
+        let icons = { income: '💰', expense: '💸', profit: '📊', notpaid: '🔴', partial: '🟡', paid: '✅' };
+        return '<div class="stat-card sc-' + cls + '"><div class="sc-icon">' + (icons[cls] || '📋') +
+            '</div><div class="sc-label">' + label + '</div><div class="sc-value">' + (typeof value === 'number' ?
+                money(value) : value) + '</div></div>';
+    }
+
+    function updateDashboard() {
+        let today = todayStr(),
+            week = getWeekRange(),
+            month = getMonthRange();
+        let sToday = statsOf(entriesBetween(today, today)),
+            sWeek = statsOf(entriesBetween(week.from, week.to)),
+            sMonth = statsOf(entriesBetween(month.from, month.to)),
+            sTotal = statsOf(entries);
+        let sets = [
+            ['statToday', sToday],
+            ['statWeek', sWeek],
+            ['statMonth', sMonth],
+            ['statTotal', sTotal]
+        ];
+        sets.forEach(([id, s]) => {
+            let el = document.getElementById(id);
+            if (el) el.innerHTML = statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery',
+                s.custAmt, 'income') + statCardHTML('Profit', s.profit, 'profit') + statCardHTML(
+                'Not Paid', s.notpaidCount + ' entries', 'notpaid');
+        });
+        let recent = entries.slice(0, 6);
+        let rx = document.getElementById('recentTx');
+        if (rx) rx.innerHTML = recent.length ? recent.map(e => {
+            let sc = e.status === 'Paid' ? 'var(--green)' : e.status === 'Partial' ? 'var(--orange)' :
+                'var(--red)';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid #f4f5f7;"><div><strong>' +
+                escH(e.description || '') + '</strong><br><small style="color:var(--text3);">' + fmtDate(e
+                    .date) + ' · <span style="color:' + sc + ';">' + e.status +
+                '</span></small></div><span style="font-weight:700;">' + money(e.profit || 0) +
+                '</span></div>';
+        }).join('') : '<p style="color:var(--text3);text-align:center;padding:1rem;">No entries yet</p>';
+        renderMainChart();
+    }
+
+    function toggleRptCustom() {
+        let v = (document.getElementById('rptPeriod') || {}).value || 'monthly';
+        document.getElementById('rptFrom').style.display = v === 'custom' ? 'inline-block' : 'none';
+        document.getElementById('rptTo').style.display = v === 'custom' ? 'inline-block' : 'none';
+    }
+
+    function genReport() {
+        let p = (document.getElementById('rptPeriod') || {}).value || 'monthly';
+        let cf = (document.getElementById('rptFrom') || {}).value || '';
+        let ct = (document.getElementById('rptTo') || {}).value || '';
+        let range = getRange(p, cf, ct);
+        let arr = entriesBetween(range.from, range.to);
+        let s = statsOf(arr);
+        let el = document.getElementById('rptStatRow');
+        if (el) el.innerHTML = statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery', s.custAmt,
+            'income') + statCardHTML('Profit', s.profit, 'profit') + statCardHTML('Paid', s.paidCount + ' entries',
+            'paid') + statCardHTML('Partial', s.partialCount + ' entries', 'partial') + statCardHTML('Not Paid', s
+            .notpaidCount + ' entries', 'notpaid') +
+            '<div class="stat-card"><div class="sc-icon" style="background:#f0f4ff;color:#3f6ef0;">📋</div><div class="sc-label">Total Entries</div><div class="sc-value" style="color:#3f6ef0;">' +
+            s.count + '</div></div>';
+        let tb = document.getElementById('rptTbody');
+        if (tb) tb.innerHTML = arr.map(e => {
+            let sc = e.status === 'Paid' ? 'badge-paid' : e.status === 'Partial' ? 'badge-partial' :
+                'badge-notpaid';
+            return '<tr><td>' + fmtDate(e.date) + '</td><td>' + money(e.customerAmount || 0) + '</td><td>' +
+                money(e.expenseAmount || 0) + '</td><td style="color:' + ((e.profit || 0) >= 0 ?
+                    'var(--green)' : 'var(--red)') + ';font-weight:700;">' + money(e.profit || 0) +
+                '</td><td><span class="badge ' + sc + '">' + e.status + '</span></td><td>' + (e.method || '') +
+                '</td><td>' + escH(e.description || '') + '</td></tr>';
+        }).join('');
+    }
+
+    function printReport() {
+        let p = (document.getElementById('rptPeriod') || {}).value || 'monthly';
+        let cf = (document.getElementById('rptFrom') || {}).value || '';
+        let ct = (document.getElementById('rptTo') || {}).value || '';
+        let range = getRange(p, cf, ct);
+        let arr = entriesBetween(range.from, range.to);
+        let s = statsOf(arr);
+        let w = window.open('', '_blank', 'width=800,height=600');
+        if (!w) { toast('Popup blocked', 'err'); return; }
+        w.document.write(
+            '<html><head><title>Kalopsia Report</title><style>body{font-family:Inter,sans-serif;padding:20px;color:#1b1e28}h1{color:#3f6ef0}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #e1e4ea;padding:7px;font-size:0.8rem}th{background:#f9fafb}</style></head><body><h1>Kalopsia - Chullikara Report</h1><p>Period: ' +
+            fmtDate(range.from) + ' – ' + fmtDate(range.to) + '</p><p>Expenses: ' + money(s.expense) +
+            ' | Recovery: ' + money(s.custAmt) + ' | Profit: ' + money(s.profit) + ' | Entries: ' + s.count +
+            '</p><table><thead><tr><th>Date</th><th>Cust. Amt</th><th>Expense</th><th>Profit</th><th>Status</th><th>Method</th><th>Description</th></tr></thead><tbody>' +
+            arr.map(e => '<tr><td>' + fmtDate(e.date) + '</td><td>' + money(e.customerAmount || 0) + '</td><td>' +
+                money(e.expenseAmount || 0) + '</td><td>' + money(e.profit || 0) + '</td><td>' + e.status +
+                '</td><td>' + (e.method || '') + '</td><td>' + escH(e.description || '') + '</td></tr>').join(
+                '') + '</tbody></table></body></html>');
+        w.document.close();
+        w.print();
+    }
+
+    function getExpEntries() { let p = (document.getElementById('expPeriod') || {}).value || 'all'; if (p === 'all')
+        return [...entries]; let r = getRange(p, '', ''); return entriesBetween(r.from, r.to); }
+
+    function updateExpPreview() { let s = statsOf(getExpEntries()); let el = document.getElementById('expPreview'); if (
+            el) el.innerHTML =
+            '<div class="stat-row" style="max-width:500px;margin:0 auto;">' + statCardHTML('Expenses', s.expense,
+                'expense') + statCardHTML('Recovery', s.custAmt, 'income') + statCardHTML('Profit', s.profit,
+            'profit') + '</div>'; }
+
+    function exportPDF() {
+        let arr = getExpEntries(),
+            s = statsOf(arr);
+        let jsPDF = window.jspdf && window.jspdf.jsPDF;
+        if (!jsPDF) { toast('PDF lib missing', 'err'); return; }
+        let doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        doc.setFontSize(16);
+        doc.setTextColor(27, 30, 40);
+        doc.text('Kalopsia - Chullikara Report', 14, 20);
+        doc.setFontSize(8);
+        doc.setTextColor(84, 88, 104);
+        doc.text('Expenses: ' + money(s.expense) + ' | Recovery: ' + money(s.custAmt) + ' | Profit: ' + money(s
+            .profit) + ' | Entries: ' + s.count, 14, 34);
+        doc.autoTable({ startY: 40, head: [
+                ['Date', 'Cust. Amt', 'Expense', 'Profit', 'Status', 'Method', 'Description']
+            ], body: arr.map(e => [fmtDate(e.date), money(e.customerAmount || 0), money(e.expenseAmount || 0),
+                money(e.profit || 0), e.status, e.method || '', e.description || ''
+            ]), styles: { fontSize: 7, cellPadding: 2.5 }, headStyles: { fillColor: [63, 110,
+                240
+            ] }, alternateRowStyles: { fillColor: [245, 247, 250] } });
+        doc.save('kalopsia-report.pdf');
+        toast('PDF exported!', 'ok');
+    }
+
+    function exportExcel() {
+        if (!window.XLSX) { toast('XLSX lib missing', 'err'); return; }
+        let data = getExpEntries().map(e => ({ Date: fmtDate(e.date), 'Cust. Amt': Number(e.customerAmount) || 0,
+            Expense: Number(e.expenseAmount) || 0, Profit: Number(e.profit) || 0, Status: e.status,
+            Method: e.method || '', Description: e.description || '' }));
+        let ws = XLSX.utils.json_to_sheet(data);
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'DataCentre');
+        XLSX.writeFile(wb, 'kalopsia-data.xlsx');
+        toast('Excel exported!', 'ok');
+    }
+
+    function updateSettings() {
+        let s = statsOf(entries);
+        let el = document.getElementById('setCloud');
+        if (el) el.innerHTML =
+            '<div>☁️ <strong>Firestore:</strong> ' + (fbReady ? 'Connected • kalopsia-0404' : 'Not Connected') +
+            '</div><div>🔁 <strong>Sync:</strong> Real-time cloud</div>';
+        el = document.getElementById('setStats');
+        if (el) el.innerHTML = '<div>📌 <strong>Entries:</strong> ' + s.count + '</div><div>💸 <strong>Expenses:</strong> ' +
+            money(s.expense) + '</div><div>💰 <strong>Recovery:</strong> ' + money(s.custAmt) +
+            '</div><div>📊 <strong>Profit:</strong> ' + money(s.profit) + '</div><div>✅ <strong>Paid:</strong> ' + s
+            .paidCount + ' | 🟡 <strong>Partial:</strong> ' + s.partialCount + ' | 🔴 <strong>Not Paid:</strong> ' + s
+            .notpaidCount + '</div>';
+        el = document.getElementById('setSys');
+        if (el) el.innerHTML =
+            '<div>📦 <strong>App:</strong> Kalopsia Data Centre v6.0</div><div>☁️ <strong>DB:</strong> Firebase Firestore</div><div>💳 <strong>Payments:</strong> UPI + Cash</div>';
+    }
+
+    function backupJSON() {
+        let blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'kalopsia-backup-' + todayStr() + '.json';
+        a.click();
+        toast('Backup downloaded!', 'ok');
+    }
+
+    function restoreJSON(e) {
+        let file = e.target.files && e.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = async function(ev) {
+            try {
+                let data = JSON.parse(ev.target.result);
+                if (!Array.isArray(data)) throw new Error('Invalid');
+                if (confirm('Restore ' + data.length + ' entries? This replaces all data.')) {
+                    entries = data;
+                    if (fbReady && db) { let batch = writeBatch(db);
+                        let snap = await getDocs(collection(db, 'transactions'));
+                        snap.docs.forEach(d => batch.delete(d.ref));
+                        entries.forEach(e => { let ref = doc(db, 'transactions', e.id);
+                            batch.set(ref, { ...e }); });
+                        await batch.commit(); }
+                    await loadAllFromFirestore();
+                    updateDCESummary();
+                    renderDCETable();
+                    updateDashboard();
+                    toast('Data restored!', 'ok');
+                }
+            } catch (err) { toast('Invalid file!', 'err'); }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    }
+
+    async function clearAllData() {
+        if (!confirm('Delete ALL entries? This cannot be undone.')) return;
+        if (!confirm('FINAL: All Firestore data will be erased. Continue?')) return;
+        entries = [];
+        if (fbReady && db) { let snap = await getDocs(collection(db, 'transactions')); let batch = writeBatch(db);
+            snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); }
+        updateDCESummary();
+        renderDCETable();
+        updateDashboard();
+        toast('All data cleared', 'err');
+    }
+
+    function updateLiveClock() {
+        let el = document.getElementById('liveDate');
+        if (el) el.textContent = fmtDate(todayStr()) + ' · ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit',
+            minute: '2-digit' });
+    }
+
+    async function init() {
+        await initFB();
+        if (fbReady) await loadAllFromFirestore();
+        document.getElementById('dceDt').value = todayStr();
+        document.getElementById('dceCustAmt').value = '0';
+        setStatusUI('Paid');
+        updateLiveClock();
+        setInterval(updateLiveClock, 30000);
+        updateDashboard();
+        updateDCESummary();
+        updateSettings();
+        document.getElementById('rptPeriod').addEventListener('change', () => { toggleRptCustom();
+            genReport(); });
+        document.getElementById('expPeriod').addEventListener('change', updateExpPreview);
+        console.log('✅ Kalopsia - Chullikara | Single Entry System Ready');
+    }
+
+    window.navTo = navTo;
+    window.toggleSidebar = toggleSidebar;
+    window.closeSidebar = closeSidebar;
+    window.setStatus = setStatus;
+    window.handleDCESubmit = handleDCESubmit;
+    window.cancelDCEEdit = cancelDCEEdit;
+    window._editDCE = editDCE;
+    window._deleteDCE = deleteDCE;
+    window.undoDel = undoDel;
+    window.dismissUndo = dismissUndo;
+    window.sortDCE = sortDCE;
+    window.renderDCETable = renderDCETable;
+    window._dcePage = function(p) { dcePg = p;
+        renderDCETable(); };
+    window.toggleRptCustom = toggleRptCustom;
+    window.genReport = genReport;
+    window.printReport = printReport;
+    window.updateExpPreview = updateExpPreview;
+    window.exportPDF = exportPDF;
+    window.exportExcel = exportExcel;
+    window.backupJSON = backupJSON;
+    window.restoreJSON = restoreJSON;
+    window.clearAllData = clearAllData;
+    window.updateDCESummary = updateDCESummary;
+
+    document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
