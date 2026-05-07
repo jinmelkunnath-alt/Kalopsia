@@ -474,11 +474,34 @@
             box-shadow: 0 0 0 3px var(--accentGlow), var(--shadowInput);
             background: #fff;
         }
+        .auto-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 18px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        .auto-status-badge.auto-paid {
+            background: var(--greenBg);
+            color: #0a6e30;
+        }
+        .auto-status-badge.auto-partial {
+            background: var(--orangeBg);
+            color: #a86510;
+        }
+        .auto-status-badge.auto-notpaid {
+            background: var(--redBg);
+            color: #a02525;
+        }
         .status-selector {
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1rem;
             flex-wrap: wrap;
+            align-items: center;
         }
         .status-chip {
             padding: 0.5rem 1.1rem;
@@ -815,19 +838,21 @@
                 <div class="card">
                     <div class="card-header"><span class="card-title">🏗️ New Service Entry</span></div>
                     <form id="dceForm" onsubmit="handleDCESubmit(event)">
-                        <label style="font-size:0.67rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.4rem;display:block;">Customer Payment Status</label>
+                        <label style="font-size:0.67rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.4rem;display:block;">Payment Status <span style="font-weight:400;color:var(--text3);">(auto-detected from amounts)</span></label>
                         <div class="status-selector" id="statusSelector">
                             <div class="status-chip selected-paid" data-status="Paid" onclick="setStatus('Paid')">✅ Paid</div>
                             <div class="status-chip" data-status="Partial" onclick="setStatus('Partial')">🟡 Partial</div>
                             <div class="status-chip" data-status="Not Paid" onclick="setStatus('Not Paid')">🔴 Not Paid</div>
+                            <span class="auto-status-badge auto-paid" id="autoStatusBadge">🤖 Auto: Paid</span>
                         </div>
                         <input type="hidden" id="dceStatus" value="Paid">
                         <div class="form-row">
-                            <div class="form-group"><label>Customer Amount (₹)</label><input type="number" id="dceCustAmt" placeholder="0.00" step="0.01" min="0" value="0" required></div>
+                            <div class="form-group"><label>Customer Amount (₹)</label><input type="number" id="dceCustAmt" placeholder="0.00" step="0.01" min="0" value="0" required oninput="autoCalcStatus()"></div>
                             <div class="form-group"><label>Date (DD/MM/YYYY)</label><input type="date" id="dceDt" required></div>
-                            <div class="form-group" id="dceExpenseGroup"><label>Expense Amount (₹)</label><input type="number" id="dceExpAmt" placeholder="0.00" step="0.01" min="0" value="0"></div>
+                            <div class="form-group" id="dceExpenseGroup"><label>Expense Amount (₹)</label><input type="number" id="dceExpAmt" placeholder="0.00" step="0.01" min="0" value="0" oninput="autoCalcStatus()"></div>
                             <div class="form-group"><label>Type</label><select id="dceTyp" required><option value="Customer Payment">💰 Customer Payment</option><option value="Expense">💸 Expense</option></select></div>
                             <div class="form-group"><label>Payment Method</label><select id="dceMthd" required><option value="UPI">📱 UPI</option><option value="Cash">💵 Cash</option><option value="Not Paid" id="dceMthdNotPaid">🚫 Not Paid</option></select></div>
+                            <div class="form-group"><label>Auto Profit (₹)</label><input type="text" id="dceAutoProfit" value="₹0.00" readonly style="background:#e9efff;color:var(--accent);font-weight:700;border-color:#c8d6f5;"></div>
                         </div>
                         <div class="form-group" style="margin-top:0.6rem;"><label>Description</label><textarea id="dceDesc" rows="2" placeholder="Describe this service entry..." required></textarea></div>
                         <input type="hidden" id="dceEditId">
@@ -932,7 +957,20 @@
         function entriesBetween(from, to) {
             let f = normalizeYMD(from),
                 t = normalizeYMD(to);
+            if (!f || !t) return [];
             return entries.filter(x => x.date >= f && x.date <= t);
+        }
+
+        function computeStatus(custAmt, expAmt) {
+            let ca = Number(custAmt) || 0;
+            let ea = Number(expAmt) || 0;
+            if (ca <= 0) return 'Not Paid';
+            if (ca >= ea) return 'Paid';
+            return 'Partial';
+        }
+
+        function computeProfit(custAmt, expAmt) {
+            return (Number(custAmt) || 0) - (Number(expAmt) || 0);
         }
 
         function statsOf(arr) {
@@ -1013,38 +1051,55 @@
                 setTimeout(() => t.remove(), 260); }, 2500);
         }
 
-        function destroyCh(k) { if (chartRefs[k]) { try { chartRefs[k].destroy(); } catch (e) {} chartRefs[k] =
-            null; } }
+        function destroyAllCharts() {
+            Object.keys(chartRefs).forEach(k => {
+                if (chartRefs[k]) {
+                    try { chartRefs[k].destroy(); } catch (e) {}
+                    chartRefs[k] = null;
+                }
+            });
+        }
 
         function createTradingChart(canvas, labels, datasets) {
-            return new Chart(canvas, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { position: 'top', labels: { color: '#545868', usePointStyle: true,
-                                padding: 16, font: { size: 10 } } }, tooltip: { backgroundColor: '#fff',
-                            titleColor: '#1b1e28', bodyColor: '#545868', borderColor: '#e1e4ea',
-                            borderWidth: 1, cornerRadius: 8, padding: 10 } },
-                    scales: { x: { ticks: { color: '#a9adb8', maxTicksLimit: 8, font: { size: 8 } },
-                            grid: { display: false }, border: { display: true, color: '#e8eaef',
-                            width: 0.6 } }, y: { ticks: { color: '#a9adb8', font: { size: 8 },
-                            callback: v => '₹' + v, maxTicksLimit: 6 },
-                        grid: { color: 'rgba(240,241,244,0.9)', lineWidth: 0.5 },
-                    border: { display: true, color: '#e8eaef', width: 0.6 }, beginAtZero: true } }
-            }
-        });
+            if (!canvas) return null;
+            if (labels.length === 0 || datasets.length === 0) return null;
+            try {
+                let ctx = canvas.getContext('2d');
+                if (!ctx) return null;
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 600, easing: 'easeOutQuart' },
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: { legend: { position: 'top', labels: { color: '#545868', usePointStyle: true,
+                                    padding: 16, font: { size: 10 } } }, tooltip: { backgroundColor: '#fff',
+                                titleColor: '#1b1e28', bodyColor: '#545868', borderColor: '#e1e4ea',
+                                borderWidth: 1, cornerRadius: 8, padding: 10 } },
+                        scales: { x: { ticks: { color: '#a9adb8', maxTicksLimit: 8, font: { size: 8 } },
+                                grid: { display: false }, border: { display: true, color: '#e8eaef',
+                                width: 0.6 } }, y: { ticks: { color: '#a9adb8', font: { size: 8 },
+                                callback: v => '₹' + v, maxTicksLimit: 6 },
+                            grid: { color: 'rgba(240,241,244,0.9)', lineWidth: 0.5 },
+                        border: { display: true, color: '#e8eaef', width: 0.6 }, beginAtZero: true } }
+                }
+            });
+        } catch(e) { console.warn('Chart creation error:', e); return null; }
     }
 
     function renderMainChart() {
-        let now = new Date(),
-            days = [];
-        for (let i = 29; i >= 0; i--) { let d = new Date(now);
-            d.setDate(d.getDate() - i); let ds = ymdFromDate(d); let st = statsOf(entriesBetween(ds, ds));
-            days.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit }); }
-        destroyCh('mainChart');
+        destroyAllCharts();
+        let now = new Date();
+        let days = [];
+        for (let i = 29; i >= 0; i--) {
+            let d = new Date(now);
+            d.setDate(d.getDate() - i);
+            let ds = ymdFromDate(d);
+            let st = statsOf(entriesBetween(ds, ds));
+            days.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit });
+        }
         let canvas = document.getElementById('mainChart');
         if (!canvas) return;
         let ctx = canvas.getContext('2d');
@@ -1070,48 +1125,55 @@
         ]);
     }
 
-    function renderAnalytics() {
-        let now = new Date(),
-            d60 = [];
-        for (let i = 59; i >= 0; i--) { let d = new Date(now);
-            d.setDate(d.getDate() - i); let ds = ymdFromDate(d); let st = statsOf(entriesBetween(ds, ds));
-            d60.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit }); }
-        destroyCh('aLine');
-        let al = document.getElementById('aLine');
-        if (al) {
-            let ctx = al.getContext('2d');
+    function renderAnalyticsCharts() {
+        destroyAllCharts();
+        let now = new Date();
+        let d60 = [];
+        for (let i = 59; i >= 0; i--) {
+            let d = new Date(now);
+            d.setDate(d.getDate() - i);
+            let ds = ymdFromDate(d);
+            let st = statsOf(entriesBetween(ds, ds));
+            d60.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit });
+        }
+        let alCanvas = document.getElementById('aLine');
+        if (alCanvas && d60.length > 0) {
+            let ctx = alCanvas.getContext('2d');
             let g1 = ctx.createLinearGradient(0, 0, 0, 310);
             g1.addColorStop(0, 'rgba(229,69,69,0.10)');
             g1.addColorStop(1, 'rgba(229,69,69,0.0)');
             let g2 = ctx.createLinearGradient(0, 0, 0, 310);
             g2.addColorStop(0, 'rgba(13,158,83,0.10)');
             g2.addColorStop(1, 'rgba(13,158,83,0.0)');
-            chartRefs['aLine'] = createTradingChart(al, d60.filter((_, i) => i % 4 === 0).map(d => fmtDate(d.date)), [
+            let filt = d60.filter((_, i) => i % 4 === 0);
+            chartRefs['aLine'] = createTradingChart(alCanvas, filt.map(d => fmtDate(d.date)), [
                 { label: 'Expenses', data: d60.map(d => d.expense), borderColor: '#f06060',
-                    backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 4,
-                    borderWidth: 1.7 },
+                    backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0,
+                    pointHoverRadius: 4, borderWidth: 1.7 },
                 { label: 'Recovery', data: d60.map(d => d.custAmt), borderColor: '#15b865',
-                    backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 4,
-                    borderWidth: 1.7 }
+                    backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0,
+                    pointHoverRadius: 4, borderWidth: 1.7 }
             ]);
         }
-        destroyCh('aBar');
-        let ab = document.getElementById('aBar');
-        if (ab) {
+        let abCanvas = document.getElementById('aBar');
+        if (abCanvas) {
             let weeks = [];
-            for (let w = 7; w >= 0; w--) { let ed = new Date(now);
-                ed.setDate(ed.getDate() - w * 7); let sd = new Date(ed);
+            for (let w = 7; w >= 0; w--) {
+                let ed = new Date(now);
+                ed.setDate(ed.getDate() - w * 7);
+                let sd = new Date(ed);
                 sd.setDate(sd.getDate() - 6);
-                weeks.push({ label: 'W' + (8 - w), profit: statsOf(entriesBetween(ymdFromDate(sd), ymdFromDate(
-                        ed))).profit }); }
-            let ctx = ab.getContext('2d');
+                weeks.push({ label: 'W' + (8 - w), profit: statsOf(entriesBetween(ymdFromDate(sd),
+                        ymdFromDate(ed))).profit });
+            }
+            let ctx = abCanvas.getContext('2d');
             let gP = ctx.createLinearGradient(0, 0, 0, 260);
             gP.addColorStop(0, 'rgba(63,110,240,0.14)');
             gP.addColorStop(1, 'rgba(63,110,240,0.0)');
-            chartRefs['aBar'] = createTradingChart(ab, weeks.map(w => w.label), [
+            chartRefs['aBar'] = createTradingChart(abCanvas, weeks.map(w => w.label), [
                 { label: 'Weekly Net', data: weeks.map(w => w.profit), borderColor: '#3f6ef0',
-                    backgroundColor: gP, fill: true, tension: 0.46, pointRadius: 0, pointHoverRadius: 4,
-                    borderWidth: 1.8 }
+                    backgroundColor: gP, fill: true, tension: 0.46, pointRadius: 0,
+                    pointHoverRadius: 4, borderWidth: 1.8 }
             ]);
         }
         let ts = statsOf(entries);
@@ -1186,7 +1248,9 @@
                 break;
             case 'dce':
                 document.getElementById('dceDt').value = todayStr();
-                setStatusUI('Paid');
+                document.getElementById('dceCustAmt').value = '0';
+                document.getElementById('dceExpAmt').value = '0';
+                autoCalcStatus();
                 updateDCESummary();
                 renderDCETable();
                 break;
@@ -1196,7 +1260,7 @@
                 genReport();
                 break;
             case 'analytics':
-                renderAnalytics();
+                renderAnalyticsCharts();
                 break;
             case 'export':
                 updateExpPreview();
@@ -1207,12 +1271,59 @@
         }
     }
 
-    function setStatus(status) {
-        document.getElementById('dceStatus').value = status;
-        setStatusUI(status);
+    function autoCalcStatus() {
+        let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
+        let expAmt = parseFloat(document.getElementById('dceExpAmt').value) || 0;
+        let autoStatus = computeStatus(custAmt, expAmt);
+        let profit = computeProfit(custAmt, expAmt);
+        document.getElementById('dceAutoProfit').value = money(profit);
+        let badge = document.getElementById('autoStatusBadge');
+        if (badge) {
+            badge.textContent = '🤖 Auto: ' + autoStatus;
+            badge.className = 'auto-status-badge auto-' + autoStatus.toLowerCase().replace(' ', '');
+        }
+        document.getElementById('dceStatus').value = autoStatus;
+        let mthdNotPaid = document.getElementById('dceMthdNotPaid');
+        if (autoStatus === 'Not Paid') {
+            document.getElementById('dceExpenseGroup').style.display = 'none';
+            if (mthdNotPaid) mthdNotPaid.style.display = 'block';
+            document.getElementById('dceMthd').value = 'Not Paid';
+        } else {
+            document.getElementById('dceExpenseGroup').style.display = 'flex';
+            if (mthdNotPaid) mthdNotPaid.style.display = 'none';
+            if (document.getElementById('dceMthd').value === 'Not Paid') document.getElementById('dceMthd').value =
+                'UPI';
+        }
+        updateStatusChips(autoStatus);
     }
 
-    function setStatusUI(status) {
+    function setStatus(status) {
+        document.getElementById('dceStatus').value = status;
+        updateStatusChips(status);
+        let mthdNotPaid = document.getElementById('dceMthdNotPaid');
+        if (status === 'Not Paid') {
+            document.getElementById('dceExpenseGroup').style.display = 'none';
+            if (mthdNotPaid) mthdNotPaid.style.display = 'block';
+            document.getElementById('dceMthd').value = 'Not Paid';
+        } else {
+            document.getElementById('dceExpenseGroup').style.display = 'flex';
+            if (mthdNotPaid) mthdNotPaid.style.display = 'none';
+            if (document.getElementById('dceMthd').value === 'Not Paid') document.getElementById('dceMthd').value =
+                'UPI';
+        }
+        let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
+        let expAmt = parseFloat(document.getElementById('dceExpAmt').value) || 0;
+        let profit = computeProfit(custAmt, expAmt);
+        document.getElementById('dceAutoProfit').value = money(profit);
+        let autoS = computeStatus(custAmt, expAmt);
+        let badge = document.getElementById('autoStatusBadge');
+        if (badge) {
+            badge.textContent = '🤖 Auto: ' + autoS + ' | Manual: ' + status;
+            badge.className = 'auto-status-badge auto-' + autoS.toLowerCase().replace(' ', '');
+        }
+    }
+
+    function updateStatusChips(status) {
         document.querySelectorAll('#statusSelector .status-chip').forEach(chip => {
             chip.className = 'status-chip';
             if (chip.dataset.status === status) {
@@ -1221,28 +1332,18 @@
                 else chip.classList.add('selected-notpaid');
             }
         });
-        let expGroup = document.getElementById('dceExpenseGroup');
-        let mthdNotPaid = document.getElementById('dceMthdNotPaid');
-        if (status === 'Not Paid') {
-            if (expGroup) expGroup.style.display = 'none';
-            if (mthdNotPaid) mthdNotPaid.style.display = 'block';
-            document.getElementById('dceMthd').value = 'Not Paid';
-        } else {
-            if (expGroup) expGroup.style.display = 'flex';
-            if (mthdNotPaid) mthdNotPaid.style.display = 'none';
-            if (document.getElementById('dceMthd').value === 'Not Paid') document.getElementById('dceMthd').value =
-                'UPI';
-        }
-        document.getElementById('dceStatus').value = status;
     }
 
     async function handleDCESubmit(e) {
         e.preventDefault();
         let editId = document.getElementById('dceEditId').value;
-        let status = document.getElementById('dceStatus').value;
         let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
-        let expAmt = (status === 'Not Paid') ? 0 : (parseFloat(document.getElementById('dceExpAmt').value) || 0);
-        let profit = custAmt - expAmt;
+        let expAmt = (document.getElementById('dceStatus').value === 'Not Paid') ? 0 : (parseFloat(document
+            .getElementById('dceExpAmt').value) || 0);
+        let autoS = computeStatus(custAmt, expAmt);
+        let manualS = document.getElementById('dceStatus').value;
+        let finalStatus = manualS || autoS;
+        let profit = computeProfit(custAmt, expAmt);
         let entry = {
             id: editId || generateId(),
             customerAmount: custAmt,
@@ -1251,7 +1352,7 @@
             type: document.getElementById('dceTyp').value,
             method: document.getElementById('dceMthd').value,
             description: (document.getElementById('dceDesc').value || '').trim(),
-            status: status,
+            status: finalStatus,
             profit: profit,
             createdAt: editId ? (entries.find(e => e.id === editId)?.createdAt || new Date().toISOString()) :
                 new Date().toISOString()
@@ -1271,11 +1372,16 @@
         document.getElementById('dceForm').reset();
         document.getElementById('dceDt').value = todayStr();
         document.getElementById('dceEditId').value = '';
-        setStatusUI('Paid');
         document.getElementById('dceCustAmt').value = '0';
+        document.getElementById('dceExpAmt').value = '0';
+        document.getElementById('dceAutoProfit').value = '₹0.00';
+        updateStatusChips('Paid');
+        document.getElementById('dceStatus').value = 'Paid';
+        document.getElementById('dceExpenseGroup').style.display = 'flex';
         updateDCESummary();
         renderDCETable();
         if (curPage === 'dashboard') updateDashboard();
+        if (curPage === 'analytics') renderAnalyticsCharts();
     }
 
     function cancelDCEEdit() {
@@ -1285,7 +1391,11 @@
         document.getElementById('dceForm').reset();
         document.getElementById('dceDt').value = todayStr();
         document.getElementById('dceCustAmt').value = '0';
-        setStatusUI('Paid');
+        document.getElementById('dceExpAmt').value = '0';
+        document.getElementById('dceAutoProfit').value = '₹0.00';
+        updateStatusChips('Paid');
+        document.getElementById('dceStatus').value = 'Paid';
+        document.getElementById('dceExpenseGroup').style.display = 'flex';
     }
 
     function editDCE(id) {
@@ -1299,10 +1409,15 @@
         document.getElementById('dceEditId').value = entry.id;
         document.getElementById('dceSubmitBtn').textContent = '✏️ Update Entry';
         document.getElementById('dceCancelBtn').style.display = 'inline-flex';
-        setStatusUI(entry.status || 'Paid');
-        if (entry.status !== 'Not Paid' && document.getElementById('dceExpAmt')) {
+        if (entry.status !== 'Not Paid') {
             document.getElementById('dceExpAmt').value = entry.expenseAmount || 0;
+            document.getElementById('dceExpenseGroup').style.display = 'flex';
+        } else {
+            document.getElementById('dceExpenseGroup').style.display = 'none';
         }
+        autoCalcStatus();
+        updateStatusChips(entry.status || 'Paid');
+        document.getElementById('dceStatus').value = entry.status || 'Paid';
         navTo('dce');
         setTimeout(() => document.getElementById('page-dce').scrollIntoView({ behavior: 'smooth' }), 100);
     }
@@ -1316,6 +1431,7 @@
         updateDCESummary();
         renderDCETable();
         if (curPage === 'dashboard') updateDashboard();
+        if (curPage === 'analytics') renderAnalyticsCharts();
         showUndo();
         toast('Entry deleted', 'err');
     }
@@ -1341,6 +1457,7 @@
         updateDCESummary();
         renderDCETable();
         if (curPage === 'dashboard') updateDashboard();
+        if (curPage === 'analytics') renderAnalyticsCharts();
         document.getElementById('undoBar').style.display = 'none';
         clearTimeout(undoTO);
         toast('Entry restored!', 'ok');
@@ -1585,7 +1702,7 @@
             .notpaidCount + '</div>';
         el = document.getElementById('setSys');
         if (el) el.innerHTML =
-            '<div>📦 <strong>App:</strong> Kalopsia Data Centre v6.0</div><div>☁️ <strong>DB:</strong> Firebase Firestore</div><div>💳 <strong>Payments:</strong> UPI + Cash</div>';
+            '<div>📦 <strong>App:</strong> Kalopsia Data Centre v7.0</div><div>☁️ <strong>DB:</strong> Firebase Firestore</div><div>💳 <strong>Payments:</strong> UPI + Cash</div><div>🤖 <strong>Status:</strong> Auto-detection enabled</div>';
     }
 
     function backupJSON() {
@@ -1617,6 +1734,7 @@
                     updateDCESummary();
                     renderDCETable();
                     updateDashboard();
+                    if (curPage === 'analytics') renderAnalyticsCharts();
                     toast('Data restored!', 'ok');
                 }
             } catch (err) { toast('Invalid file!', 'err'); }
@@ -1634,6 +1752,7 @@
         updateDCESummary();
         renderDCETable();
         updateDashboard();
+        if (curPage === 'analytics') renderAnalyticsCharts();
         toast('All data cleared', 'err');
     }
 
@@ -1648,7 +1767,8 @@
         if (fbReady) await loadAllFromFirestore();
         document.getElementById('dceDt').value = todayStr();
         document.getElementById('dceCustAmt').value = '0';
-        setStatusUI('Paid');
+        document.getElementById('dceExpAmt').value = '0';
+        autoCalcStatus();
         updateLiveClock();
         setInterval(updateLiveClock, 30000);
         updateDashboard();
@@ -1657,13 +1777,14 @@
         document.getElementById('rptPeriod').addEventListener('change', () => { toggleRptCustom();
             genReport(); });
         document.getElementById('expPeriod').addEventListener('change', updateExpPreview);
-        console.log('✅ Kalopsia - Chullikara | Single Entry System Ready');
+        console.log('✅ Kalopsia - Chullikara | Auto-Status System Ready');
     }
 
     window.navTo = navTo;
     window.toggleSidebar = toggleSidebar;
     window.closeSidebar = closeSidebar;
     window.setStatus = setStatus;
+    window.autoCalcStatus = autoCalcStatus;
     window.handleDCESubmit = handleDCESubmit;
     window.cancelDCEEdit = cancelDCEEdit;
     window._editDCE = editDCE;
