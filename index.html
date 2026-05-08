@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalopsia - Chullikara | Data Centre Manager</title>
     <link rel="icon" type="image/png" href="download.png">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js">
@@ -14,11 +13,9 @@
     </script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js">
     </script>
-
     <script type="importmap">
         {"imports":{"firebase/app":"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js","firebase/firestore":"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"}}
     </script>
-
     <style>
         :root {
             --bg: #eef1f5;
@@ -41,8 +38,7 @@
             --orangeBg: #fff7ed;
             --blueBg: #e9efff;
             --shadowCard: 0 1px 0 #fff inset, 0 3px 14px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.025);
-            --shadowBtn: 0 2px 7px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 0 rgba(255, 255, 255,
-                    0.6) inset;
+            --shadowBtn: 0 2px 7px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
             --shadowInput: inset 0 2px 5px rgba(0, 0, 0, 0.04), 0 1px 0 rgba(255, 255, 255, 0.5);
             --r-sm: 9px;
             --r: 13px;
@@ -474,6 +470,13 @@
             box-shadow: 0 0 0 3px var(--accentGlow), var(--shadowInput);
             background: #fff;
         }
+        .form-group input[readonly] {
+            background: #e9efff;
+            color: var(--accent);
+            font-weight: 700;
+            border-color: #c8d6f5;
+            cursor: default;
+        }
         .auto-status-badge {
             display: inline-flex;
             align-items: center;
@@ -484,54 +487,16 @@
             font-size: 0.75rem;
             margin-left: 0.5rem;
         }
-        .auto-status-badge.auto-paid {
+        .auto-status-badge.status-paid {
             background: var(--greenBg);
             color: #0a6e30;
         }
-        .auto-status-badge.auto-partial {
+        .auto-status-badge.status-partial {
             background: var(--orangeBg);
             color: #a86510;
         }
-        .auto-status-badge.auto-notpaid {
+        .auto-status-badge.status-notpaid {
             background: var(--redBg);
-            color: #a02525;
-        }
-        .status-selector {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .status-chip {
-            padding: 0.5rem 1.1rem;
-            border-radius: 20px;
-            border: 2px solid var(--border);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: var(--t);
-            background: var(--surface);
-            color: var(--text2);
-            user-select: none;
-        }
-        .status-chip:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-        .status-chip.selected-paid {
-            background: var(--greenBg);
-            border-color: var(--green);
-            color: #0a6e30;
-        }
-        .status-chip.selected-partial {
-            background: var(--orangeBg);
-            border-color: var(--orange);
-            color: #a86510;
-        }
-        .status-chip.selected-notpaid {
-            background: var(--redBg);
-            border-color: var(--red);
             color: #a02525;
         }
         .table-wrap {
@@ -604,6 +569,10 @@
             background: #fff7ed;
             color: #a86510;
         }
+        .badge-np {
+            background: #fdeaea;
+            color: #a02525;
+        }
         .pagination {
             display: flex;
             gap: 0.2rem;
@@ -646,6 +615,9 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             outline: none;
             font-family: var(--font);
+        }
+        .filter-bar input[type="text"] {
+            min-width: 100px;
         }
         .toast-ctr {
             position: fixed;
@@ -792,13 +764,6 @@
             .card {
                 padding: 0.8rem;
             }
-            .status-selector {
-                gap: 0.35rem;
-            }
-            .status-chip {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.7rem;
-            }
         }
     </style>
 </head>
@@ -836,33 +801,25 @@
             </div>
             <div class="page" id="page-dce">
                 <div class="card">
-                    <div class="card-header"><span class="card-title">🏗️ New Service Entry</span></div>
+                    <div class="card-header"><span class="card-title">🏗️ New Service Entry</span><span class="auto-status-badge status-paid" id="autoStatusBadge">🤖 Auto: Paid</span></div>
                     <form id="dceForm" onsubmit="handleDCESubmit(event)">
-                        <label style="font-size:0.67rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.4rem;display:block;">Payment Status <span style="font-weight:400;color:var(--text3);">(auto-detected from amounts)</span></label>
-                        <div class="status-selector" id="statusSelector">
-                            <div class="status-chip selected-paid" data-status="Paid" onclick="setStatus('Paid')">✅ Paid</div>
-                            <div class="status-chip" data-status="Partial" onclick="setStatus('Partial')">🟡 Partial</div>
-                            <div class="status-chip" data-status="Not Paid" onclick="setStatus('Not Paid')">🔴 Not Paid</div>
-                            <span class="auto-status-badge auto-paid" id="autoStatusBadge">🤖 Auto: Paid</span>
-                        </div>
-                        <input type="hidden" id="dceStatus" value="Paid">
                         <div class="form-row">
-                            <div class="form-group"><label>Customer Amount (₹)</label><input type="number" id="dceCustAmt" placeholder="0.00" step="0.01" min="0" value="0" required oninput="autoCalcStatus()"></div>
-                            <div class="form-group"><label>Date (DD/MM/YYYY)</label><input type="date" id="dceDt" required></div>
-                            <div class="form-group" id="dceExpenseGroup"><label>Expense Amount (₹)</label><input type="number" id="dceExpAmt" placeholder="0.00" step="0.01" min="0" value="0" oninput="autoCalcStatus()"></div>
-                            <div class="form-group"><label>Type</label><select id="dceTyp" required><option value="Customer Payment">💰 Customer Payment</option><option value="Expense">💸 Expense</option></select></div>
-                            <div class="form-group"><label>Payment Method</label><select id="dceMthd" required><option value="UPI">📱 UPI</option><option value="Cash">💵 Cash</option><option value="Not Paid" id="dceMthdNotPaid">🚫 Not Paid</option></select></div>
-                            <div class="form-group"><label>Auto Profit (₹)</label><input type="text" id="dceAutoProfit" value="₹0.00" readonly style="background:#e9efff;color:var(--accent);font-weight:700;border-color:#c8d6f5;"></div>
+                            <div class="form-group"><label>Customer Amount (₹)</label><input type="number" id="dceCustAmt" placeholder="0.00" step="0.01" min="0" value="0" required oninput="autoCalcAll()"></div>
+                            <div class="form-group"><label>Expense Amount (₹)</label><input type="number" id="dceExpAmt" placeholder="0.00" step="0.01" min="0" value="0" required oninput="autoCalcAll()"></div>
+                            <div class="form-group"><label>Date (DD/MM/YYYY)</label><input type="text" id="dceDt" placeholder="DD/MM/YYYY" required maxlength="10" oninput="validateDateInput(this)" onblur="validateDateInput(this, true)"></div>
+                            <div class="form-group"><label>Payment Method</label><select id="dceMthd" required><option value="UPI">📱 UPI</option><option value="Cash">💵 Cash</option><option value="Not Paid">🚫 Not Paid</option></select></div>
+                            <div class="form-group"><label>Auto Profit (₹)</label><input type="text" id="dceAutoProfit" value="₹0.00" readonly></div>
                         </div>
                         <div class="form-group" style="margin-top:0.6rem;"><label>Description</label><textarea id="dceDesc" rows="2" placeholder="Describe this service entry..." required></textarea></div>
                         <input type="hidden" id="dceEditId">
+                        <input type="hidden" id="dceOrigCreatedAt">
                         <div style="margin-top:0.7rem;display:flex;gap:0.45rem;flex-wrap:wrap;"><button type="submit" class="btn btn-primary" id="dceSubmitBtn">💾 Save Entry</button><button type="button" class="btn btn-ghost btn-sm" id="dceCancelBtn" style="display:none;" onclick="cancelDCEEdit()">Cancel</button></div>
                     </form>
                 </div>
                 <div class="stat-row" id="dceSummaryCards"></div>
                 <div class="card">
                     <div class="card-header"><span class="card-title">📝 All Service Entries</span>
-                        <div class="filter-bar"><input type="text" id="dceSearch" placeholder="🔍 Search..." oninput="renderDCETable()"><select id="dceFStatus" onchange="renderDCETable()"><option value="all">All Status</option><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Not Paid">Not Paid</option></select><input type="date" id="dceFFrom" onchange="renderDCETable()" title="From"><input type="date" id="dceFTo" onchange="renderDCETable()" title="To"></div>
+                        <div class="filter-bar"><input type="text" id="dceSearch" placeholder="🔍 Search..." oninput="renderDCETable()"><select id="dceFStatus" onchange="renderDCETable()"><option value="all">All Status</option><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Not Paid">Not Paid</option></select><input type="text" id="dceFFrom" placeholder="From DD/MM/YYYY" maxlength="10" onchange="renderDCETable()" title="From date"><input type="text" id="dceFTo" placeholder="To DD/MM/YYYY" maxlength="10" onchange="renderDCETable()" title="To date"></div>
                     </div>
                     <div class="table-wrap"><table><thead><tr><th data-sort="date" onclick="sortDCE('date')">Date ↕</th><th data-sort="custAmt" onclick="sortDCE('custAmt')">Cust. Amt ↕</th><th data-sort="expAmt" onclick="sortDCE('expAmt')">Expense ↕</th><th data-sort="profit" onclick="sortDCE('profit')">Profit ↕</th><th>Status</th><th>Method</th><th>Description</th><th>Actions</th></tr></thead><tbody id="dceTbody"></tbody></table></div>
                     <div class="pagination" id="dcePag"></div><p style="text-align:center;color:var(--text3);font-size:0.68rem;margin-top:0.3rem;" id="dceInfo"></p>
@@ -871,7 +828,7 @@
             <div class="page" id="page-reports">
                 <div class="card">
                     <div class="card-header"><span class="card-title">📄 Reports</span>
-                        <div class="filter-bar"><select id="rptPeriod" onchange="toggleRptCustom();genReport();"><option value="daily">Today</option><option value="weekly">This Week</option><option value="monthly" selected>This Month</option><option value="yearly">This Year</option><option value="custom">Custom Range</option></select><input type="date" id="rptFrom" style="display:none;" onchange="genReport()"><input type="date" id="rptTo" style="display:none;" onchange="genReport()"><button class="btn btn-primary btn-sm" onclick="genReport()">🔄 Generate</button><button class="btn btn-sm" onclick="printReport()">🖨️ Print</button></div>
+                        <div class="filter-bar"><select id="rptPeriod" onchange="toggleRptCustom();genReport();"><option value="daily">Today</option><option value="weekly">This Week</option><option value="monthly" selected>This Month</option><option value="yearly">This Year</option><option value="custom">Custom Range</option></select><input type="text" id="rptFrom" placeholder="DD/MM/YYYY" maxlength="10" style="display:none;" onchange="genReport()"><input type="text" id="rptTo" placeholder="DD/MM/YYYY" maxlength="10" style="display:none;" onchange="genReport()"><button class="btn btn-primary btn-sm" onclick="genReport()">🔄 Generate</button><button class="btn btn-sm" onclick="printReport()">🖨️ Print</button></div>
                     </div>
                     <div class="stat-row" id="rptStatRow" style="margin-top:0.4rem;"></div>
                     <div class="table-wrap" style="margin-top:0.6rem;max-height:40vh;"><table><thead><tr><th>Date</th><th>Cust. Amt</th><th>Expense</th><th>Profit</th><th>Status</th><th>Method</th><th>Description</th></tr></thead><tbody id="rptTbody"></tbody></table></div>
@@ -898,8 +855,7 @@
 
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc, query, orderBy, writeBatch } from
-        "firebase/firestore";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, setDoc, query, orderBy, writeBatch } from "firebase/firestore";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCTK2EbMniFm5MpKqcnjqDhG8qZobvfCVQ",
@@ -922,55 +878,98 @@
         const PER_PG = 15;
         const chartRefs = {};
 
+        // ──────────────────────── UTILITY FUNCTIONS ────────────────────────
+
         function pad2(n) { return String(n).padStart(2, '0'); }
 
-        function ymdFromDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-
-        function todayStr() { return ymdFromDate(new Date()); }
-
-        function normalizeYMD(value) {
-            if (!value) return todayStr();
-            if (value instanceof Date && !isNaN(value)) return ymdFromDate(value);
-            let s = String(value).trim();
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-            let dmy = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-            if (dmy) return dmy[3] + '-' + dmy[2] + '-' + dmy[1];
-            let dt = new Date(s);
-            if (!isNaN(dt)) return ymdFromDate(dt);
-            return todayStr();
+        /** Returns today as YYYY-MM-DD (ISO, internal storage format) */
+        function todayYMD() {
+            const d = new Date();
+            return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
         }
 
-        function fmtDate(value) {
-            let ymd = normalizeYMD(value);
-            let parts = ymd.split('-');
+        /** Returns today as DD/MM/YYYY (display / user input format) */
+        function todayDMY() {
+            const d = new Date();
+            return pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+        }
+
+        /** Convert YYYY-MM-DD → DD/MM/YYYY */
+        function ymdToDmy(ymd) {
+            if (!ymd) return '';
+            const parts = String(ymd).trim().split('-');
             if (parts.length !== 3) return '';
             return parts[2] + '/' + parts[1] + '/' + parts[0];
         }
 
+        /** Convert DD/MM/YYYY → YYYY-MM-DD. Returns null if invalid. */
+        function dmyToYmd(dmy) {
+            if (!dmy) return null;
+            const s = String(dmy).trim();
+            const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (!m) return null;
+            const dd = parseInt(m[1], 10);
+            const mm = parseInt(m[2], 10);
+            const yyyy = parseInt(m[3], 10);
+            if (mm < 1 || mm > 12 || dd < 1 || dd > 31 || yyyy < 2000 || yyyy > 2100) return null;
+            const daysInMonth = new Date(yyyy, mm, 0).getDate();
+            if (dd > daysInMonth) return null;
+            return yyyy + '-' + pad2(mm) + '-' + pad2(dd);
+        }
+
+        /**
+         * Normalize ANY date input to YYYY-MM-DD.
+         * Accepts: YYYY-MM-DD, DD/MM/YYYY, Date object, ISO string.
+         * Falls back to today if completely unparseable.
+         */
+        function normalizeYMD(value) {
+            if (!value) return todayYMD();
+            if (value instanceof Date && !isNaN(value)) {
+                return value.getFullYear() + '-' + pad2(value.getMonth() + 1) + '-' + pad2(value.getDate());
+            }
+            let s = String(value).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            let dmyParsed = dmyToYmd(s);
+            if (dmyParsed) return dmyParsed;
+            let dt = new Date(s);
+            if (!isNaN(dt)) return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
+            return todayYMD();
+        }
+
+        /** Format any date value to DD/MM/YYYY for display */
+        function fmtDate(value) {
+            return ymdToDmy(normalizeYMD(value));
+        }
+
         function money(n) { return '₹' + (Number(n) || 0).toFixed(2); }
 
-        function escH(s) { let d = document.createElement('div');
-            d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+        function escH(s) {
+            const d = document.createElement('div');
+            d.textContent = s == null ? '' : String(s);
+            return d.innerHTML;
+        }
 
         function generateId() { return 'dce_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9); }
 
-        function entriesBetween(from, to) {
-            let f = normalizeYMD(from),
-                t = normalizeYMD(to);
-            if (!f || !t) return [];
-            return entries.filter(x => x.date >= f && x.date <= t);
-        }
+        // ──────────────────────── BUSINESS LOGIC ────────────────────────
 
         function computeStatus(custAmt, expAmt) {
-            let ca = Number(custAmt) || 0;
-            let ea = Number(expAmt) || 0;
+            const ca = Number(custAmt) || 0;
+            const ea = Number(expAmt) || 0;
             if (ca <= 0) return 'Not Paid';
-            if (ca >= ea) return 'Paid';
-            return 'Partial';
+            if (ca < ea) return 'Partial';
+            return 'Paid';
         }
 
         function computeProfit(custAmt, expAmt) {
             return (Number(custAmt) || 0) - (Number(expAmt) || 0);
+        }
+
+        function entriesBetween(from, to) {
+            const f = normalizeYMD(from);
+            const t = normalizeYMD(to);
+            if (!f || !t) return [];
+            return entries.filter(x => x.date >= f && x.date <= t);
         }
 
         function statsOf(arr) {
@@ -998,24 +997,31 @@
         }
 
         function getWeekRange() {
-            let now = new Date();
-            let dow = now.getDay();
-            let mon = new Date(now);
+            const now = new Date();
+            const dow = now.getDay();
+            const mon = new Date(now);
             mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-            let sun = new Date(mon);
+            const sun = new Date(mon);
             sun.setDate(mon.getDate() + 6);
             return { from: ymdFromDate(mon), to: ymdFromDate(sun) };
         }
 
-        function getMonthRange() { let now = new Date(); return { from: now.getFullYear() + '-' + pad2(now.getMonth() +
-                1) + '-01', to: todayStr() }; }
+        function ymdFromDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
 
-        function getYearRange() { let now = new Date(); return { from: now.getFullYear() + '-01-01', to: todayStr() }; }
+        function getMonthRange() {
+            const now = new Date();
+            return { from: now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-01', to: todayYMD() };
+        }
+
+        function getYearRange() {
+            const now = new Date();
+            return { from: now.getFullYear() + '-01-01', to: todayYMD() };
+        }
 
         function getRange(period, cf, ct) {
             switch (period) {
                 case 'daily':
-                    return { from: todayStr(), to: todayStr() };
+                    return { from: todayYMD(), to: todayYMD() };
                 case 'weekly':
                     return getWeekRange();
                 case 'monthly':
@@ -1023,16 +1029,72 @@
                 case 'yearly':
                     return getYearRange();
                 case 'custom':
-                    return { from: normalizeYMD(cf || todayStr()), to: normalizeYMD(ct || todayStr()) };
+                    return { from: normalizeYMD(cf || todayYMD()), to: normalizeYMD(ct || todayYMD()) };
                 default:
-                    return { from: todayStr(), to: todayStr() };
+                    return { from: todayYMD(), to: todayYMD() };
             }
         }
 
+        // ──────────────────────── AUTO CALCULATION ────────────────────────
+
+        function autoCalcAll() {
+            const custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
+            const expAmt = parseFloat(document.getElementById('dceExpAmt').value) || 0;
+            const autoStatus = computeStatus(custAmt, expAmt);
+            const profit = computeProfit(custAmt, expAmt);
+            document.getElementById('dceAutoProfit').value = money(profit);
+            const badge = document.getElementById('autoStatusBadge');
+            if (badge) {
+                badge.textContent = '🤖 Auto: ' + autoStatus;
+                badge.className = 'auto-status-badge status-' + autoStatus.toLowerCase().replace(' ', '');
+            }
+            const mthdSelect = document.getElementById('dceMthd');
+            if (autoStatus === 'Not Paid') {
+                mthdSelect.value = 'Not Paid';
+            } else if (mthdSelect.value === 'Not Paid') {
+                mthdSelect.value = 'UPI';
+            }
+        }
+
+        function validateDateInput(el, fixBlur) {
+            let val = (el.value || '').trim();
+            if (!val) return;
+            val = val.replace(/[^0-9\/]/g, '');
+            if (val.length === 10 && fixBlur) {
+                const ymd = dmyToYmd(val);
+                if (!ymd) {
+                    el.style.borderColor = 'var(--red)';
+                    el.style.boxShadow = '0 0 0 2px rgba(229,69,69,0.2)';
+                } else {
+                    el.style.borderColor = 'var(--border)';
+                    el.style.boxShadow = 'var(--shadowInput)';
+                    el.value = ymdToDmy(ymd);
+                }
+            }
+            if (val.length > 10) el.value = val.slice(0, 10);
+        }
+
+        // ──────────────────────── TOAST & UI ────────────────────────
+
+        function toast(msg, type) {
+            const c = document.getElementById('toastCtr');
+            if (!c) return;
+            const t = document.createElement('div');
+            t.className = 'toast ' + (type === 'ok' ? 'ok' : 'err');
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(60px)';
+                t.style.transition = '0.26s ease';
+                setTimeout(() => t.remove(), 260);
+            }, 2500);
+        }
+
         function updateFBUI(ready) {
-            let dot = document.getElementById('fbDot'),
-                txt = document.getElementById('fbText'),
-                el = document.getElementById('setCloud');
+            const dot = document.getElementById('fbDot');
+            const txt = document.getElementById('fbText');
+            const el = document.getElementById('setCloud');
             if (dot) dot.className = 'status-dot ' + (ready ? 'online' : 'offline');
             if (txt) txt.textContent = ready ? 'Firestore Connected' : 'Offline';
             if (el) el.innerHTML = ready ?
@@ -1040,16 +1102,7 @@
                 '❌ <strong>Not Connected</strong><br><small style="color:var(--text3);">Check Firebase config</small>';
         }
 
-        function toast(msg, type) {
-            let c = document.getElementById('toastCtr');
-            if (!c) return;
-            let t = document.createElement('div');
-            t.className = 'toast ' + (type === 'ok' ? 'ok' : 'err');
-            t.textContent = msg;
-            c.appendChild(t);
-            setTimeout(() => { t.style.animation = 'toastOut 0.26s ease forwards';
-                setTimeout(() => t.remove(), 260); }, 2500);
-        }
+        // ──────────────────────── CHART ENGINE ────────────────────────
 
         function destroyAllCharts() {
             Object.keys(chartRefs).forEach(k => {
@@ -1061,752 +1114,651 @@
         }
 
         function createTradingChart(canvas, labels, datasets) {
-            if (!canvas) return null;
-            if (labels.length === 0 || datasets.length === 0) return null;
+            if (!canvas || labels.length === 0 || datasets.length === 0) return null;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return null;
             try {
-                let ctx = canvas.getContext('2d');
-                if (!ctx) return null;
                 return new Chart(ctx, {
                     type: 'line',
                     data: { labels, datasets },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: { duration: 600, easing: 'easeOutQuart' },
+                        animation: { duration: 500, easing: 'easeOutQuart' },
                         interaction: { mode: 'index', intersect: false },
-                        plugins: { legend: { position: 'top', labels: { color: '#545868', usePointStyle: true,
-                                    padding: 16, font: { size: 10 } } }, tooltip: { backgroundColor: '#fff',
-                                titleColor: '#1b1e28', bodyColor: '#545868', borderColor: '#e1e4ea',
-                                borderWidth: 1, cornerRadius: 8, padding: 10 } },
-                        scales: { x: { ticks: { color: '#a9adb8', maxTicksLimit: 8, font: { size: 8 } },
-                                grid: { display: false }, border: { display: true, color: '#e8eaef',
-                                width: 0.6 } }, y: { ticks: { color: '#a9adb8', font: { size: 8 },
-                                callback: v => '₹' + v, maxTicksLimit: 6 },
-                            grid: { color: 'rgba(240,241,244,0.9)', lineWidth: 0.5 },
-                        border: { display: true, color: '#e8eaef', width: 0.6 }, beginAtZero: true } }
-                }
-            });
-        } catch(e) { console.warn('Chart creation error:', e); return null; }
-    }
-
-    function renderMainChart() {
-        destroyAllCharts();
-        let now = new Date();
-        let days = [];
-        for (let i = 29; i >= 0; i--) {
-            let d = new Date(now);
-            d.setDate(d.getDate() - i);
-            let ds = ymdFromDate(d);
-            let st = statsOf(entriesBetween(ds, ds));
-            days.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit });
+                        plugins: {
+                            legend: { position: 'top', labels: { color: '#545868', usePointStyle: true, padding: 16, font: { size: 10 } } },
+                            tooltip: { backgroundColor: '#fff', titleColor: '#1b1e28', bodyColor: '#545868', borderColor: '#e1e4ea', borderWidth: 1, cornerRadius: 8, padding: 10 }
+                        },
+                        scales: {
+                            x: { ticks: { color: '#a9adb8', maxTicksLimit: 8, font: { size: 8 } }, grid: { display: false }, border: { display: true, color: '#e8eaef', width: 0.6 } },
+                            y: { ticks: { color: '#a9adb8', font: { size: 8 }, callback: v => '₹' + v, maxTicksLimit: 6 }, grid: { color: 'rgba(240,241,244,0.9)', lineWidth: 0.5 }, border: { display: true, color: '#e8eaef', width: 0.6 }, beginAtZero: true }
+                        }
+                    }
+                });
+            } catch (e) { console.warn('Chart error:', e); return null; }
         }
-        let canvas = document.getElementById('mainChart');
-        if (!canvas) return;
-        let ctx = canvas.getContext('2d');
-        let g1 = ctx.createLinearGradient(0, 0, 0, 320);
-        g1.addColorStop(0, 'rgba(229,69,69,0.14)');
-        g1.addColorStop(1, 'rgba(229,69,69,0.0)');
-        let g2 = ctx.createLinearGradient(0, 0, 0, 320);
-        g2.addColorStop(0, 'rgba(13,158,83,0.14)');
-        g2.addColorStop(1, 'rgba(13,158,83,0.0)');
-        let g3 = ctx.createLinearGradient(0, 0, 0, 320);
-        g3.addColorStop(0, 'rgba(63,110,240,0.12)');
-        g3.addColorStop(1, 'rgba(63,110,240,0.0)');
-        chartRefs['mainChart'] = createTradingChart(canvas, days.map(d => fmtDate(d.date)), [
-            { label: 'Expenses', data: days.map(d => d.expense), borderColor: '#f06060',
-                backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5,
-                borderWidth: 1.8 },
-            { label: 'Recovery', data: days.map(d => d.custAmt), borderColor: '#15b865',
-                backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5,
-                borderWidth: 1.8 },
-            { label: 'Net', data: days.map(d => d.profit), borderColor: '#3f6ef0', backgroundColor: g3,
-                fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5, borderDash: [5, 3],
-                borderWidth: 1.9 }
-        ]);
-    }
 
-    function renderAnalyticsCharts() {
-        destroyAllCharts();
-        let now = new Date();
-        let d60 = [];
-        for (let i = 59; i >= 0; i--) {
-            let d = new Date(now);
-            d.setDate(d.getDate() - i);
-            let ds = ymdFromDate(d);
-            let st = statsOf(entriesBetween(ds, ds));
-            d60.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit });
-        }
-        let alCanvas = document.getElementById('aLine');
-        if (alCanvas && d60.length > 0) {
-            let ctx = alCanvas.getContext('2d');
-            let g1 = ctx.createLinearGradient(0, 0, 0, 310);
-            g1.addColorStop(0, 'rgba(229,69,69,0.10)');
+        function renderMainChart() {
+            destroyAllCharts();
+            const now = new Date();
+            const days = [];
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                const ds = ymdFromDate(d);
+                const st = statsOf(entriesBetween(ds, ds));
+                days.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit });
+            }
+            const canvas = document.getElementById('mainChart');
+            if (!canvas || days.length === 0) return;
+            const ctx = canvas.getContext('2d');
+            const g1 = ctx.createLinearGradient(0, 0, 0, 320);
+            g1.addColorStop(0, 'rgba(229,69,69,0.14)');
             g1.addColorStop(1, 'rgba(229,69,69,0.0)');
-            let g2 = ctx.createLinearGradient(0, 0, 0, 310);
-            g2.addColorStop(0, 'rgba(13,158,83,0.10)');
+            const g2 = ctx.createLinearGradient(0, 0, 0, 320);
+            g2.addColorStop(0, 'rgba(13,158,83,0.14)');
             g2.addColorStop(1, 'rgba(13,158,83,0.0)');
-            let filt = d60.filter((_, i) => i % 4 === 0);
-            chartRefs['aLine'] = createTradingChart(alCanvas, filt.map(d => fmtDate(d.date)), [
-                { label: 'Expenses', data: d60.map(d => d.expense), borderColor: '#f06060',
-                    backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0,
-                    pointHoverRadius: 4, borderWidth: 1.7 },
-                { label: 'Recovery', data: d60.map(d => d.custAmt), borderColor: '#15b865',
-                    backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0,
-                    pointHoverRadius: 4, borderWidth: 1.7 }
+            const g3 = ctx.createLinearGradient(0, 0, 0, 320);
+            g3.addColorStop(0, 'rgba(63,110,240,0.12)');
+            g3.addColorStop(1, 'rgba(63,110,240,0.0)');
+            chartRefs['mainChart'] = createTradingChart(canvas, days.map(d => ymdToDmy(d.date)), [
+                { label: 'Expenses', data: days.map(d => d.expense), borderColor: '#f06060', backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5, borderWidth: 1.8 },
+                { label: 'Recovery', data: days.map(d => d.custAmt), borderColor: '#15b865', backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5, borderWidth: 1.8 },
+                { label: 'Net', data: days.map(d => d.profit), borderColor: '#3f6ef0', backgroundColor: g3, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 5, borderDash: [5, 3], borderWidth: 1.9 }
             ]);
         }
-        let abCanvas = document.getElementById('aBar');
-        if (abCanvas) {
-            let weeks = [];
-            for (let w = 7; w >= 0; w--) {
-                let ed = new Date(now);
-                ed.setDate(ed.getDate() - w * 7);
-                let sd = new Date(ed);
-                sd.setDate(sd.getDate() - 6);
-                weeks.push({ label: 'W' + (8 - w), profit: statsOf(entriesBetween(ymdFromDate(sd),
-                        ymdFromDate(ed))).profit });
+
+        function renderAnalyticsCharts() {
+            destroyAllCharts();
+            const now = new Date();
+            const d60 = [];
+            for (let i = 59; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                const ds = ymdFromDate(d);
+                const st = statsOf(entriesBetween(ds, ds));
+                d60.push({ date: ds, expense: st.expense, custAmt: st.custAmt, profit: st.profit });
             }
-            let ctx = abCanvas.getContext('2d');
-            let gP = ctx.createLinearGradient(0, 0, 0, 260);
-            gP.addColorStop(0, 'rgba(63,110,240,0.14)');
-            gP.addColorStop(1, 'rgba(63,110,240,0.0)');
-            chartRefs['aBar'] = createTradingChart(abCanvas, weeks.map(w => w.label), [
-                { label: 'Weekly Net', data: weeks.map(w => w.profit), borderColor: '#3f6ef0',
-                    backgroundColor: gP, fill: true, tension: 0.46, pointRadius: 0,
-                    pointHoverRadius: 4, borderWidth: 1.8 }
-            ]);
-        }
-        let ts = statsOf(entries);
-        let el = document.getElementById('aSummary');
-        if (el) el.innerHTML =
-            '<div style="display:grid;gap:0.4rem;">' +
-            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Total Expenses</span><strong style="color:var(--red);">' +
-            money(ts.expense) + '</strong></div>' +
-            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Total Recovery</span><strong style="color:var(--green);">' +
-            money(ts.custAmt) + '</strong></div>' +
-            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Net Profit</span><strong style="color:var(--accent);">' +
-            money(ts.profit) + '</strong></div>' +
-            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>✅ Paid</span><strong style="color:var(--green);">' +
-            ts.paidCount + ' entries</strong></div>' +
-            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>🟡 Partial</span><strong style="color:var(--orange);">' +
-            ts.partialCount + ' entries</strong></div>' +
-            '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>🔴 Not Paid</span><strong style="color:var(--red);">' +
-            ts.notpaidCount + ' entries</strong></div>' + '</div>';
-    }
-
-    async function initFB() {
-        try { app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            fbReady = true;
-            window._db = db;
-            updateFBUI(true); return true; } catch (e) { fbReady = false;
-            updateFBUI(false); return false; }
-    }
-
-    async function loadAllFromFirestore() {
-        if (!fbReady || !db) return;
-        try { let snap = await getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc')));
-            entries = snap.docs.map(d => ({ id: d.id, ...d.data() })); } catch (e) { console.warn('Load error:', e); }
-    }
-
-    async function saveSingleEntry(entry) {
-        if (!fbReady || !db) { toast('Firestore not connected!', 'err'); return false; }
-        try { await setDoc(doc(db, 'transactions', entry.id), { ...entry }); return true; } catch (e) { toast(
-                'Save failed', 'err'); return false; }
-    }
-
-    async function deleteEntryFromFirestore(id) {
-        if (!fbReady || !db) return false;
-        try { await deleteDoc(doc(db, 'transactions', id)); return true; } catch (e) { return false; }
-    }
-
-    async function navTo(p) {
-        curPage = p;
-        document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-        let pg = document.getElementById('page-' + p);
-        if (pg) pg.classList.add('active');
-        document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
-        let link = document.querySelector('.sidebar-nav li a[data-page="' + p + '"]');
-        if (link) link.classList.add('active');
-        let titles = { dashboard: '📊 Dashboard', dce: '🏗️ Data Centre', reports: '📄 Reports',
-            analytics: '📈 Analytics', export: '📥 Export', settings: '⚙️ Settings' };
-        document.getElementById('pageTitle').textContent = titles[p] || 'Kalopsia - Chullikara';
-        closeSidebar();
-        await refreshPage(p);
-    }
-
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open');
-        document.getElementById('sidebarOverlay').classList.toggle('show'); }
-
-    function closeSidebar() { document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('sidebarOverlay').classList.remove('show'); }
-
-    async function refreshPage(p) {
-        switch (p) {
-            case 'dashboard':
-                updateDashboard();
-                break;
-            case 'dce':
-                document.getElementById('dceDt').value = todayStr();
-                document.getElementById('dceCustAmt').value = '0';
-                document.getElementById('dceExpAmt').value = '0';
-                autoCalcStatus();
-                updateDCESummary();
-                renderDCETable();
-                break;
-            case 'reports':
-                document.getElementById('rptPeriod').value = 'monthly';
-                toggleRptCustom();
-                genReport();
-                break;
-            case 'analytics':
-                renderAnalyticsCharts();
-                break;
-            case 'export':
-                updateExpPreview();
-                break;
-            case 'settings':
-                updateSettings();
-                break;
-        }
-    }
-
-    function autoCalcStatus() {
-        let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
-        let expAmt = parseFloat(document.getElementById('dceExpAmt').value) || 0;
-        let autoStatus = computeStatus(custAmt, expAmt);
-        let profit = computeProfit(custAmt, expAmt);
-        document.getElementById('dceAutoProfit').value = money(profit);
-        let badge = document.getElementById('autoStatusBadge');
-        if (badge) {
-            badge.textContent = '🤖 Auto: ' + autoStatus;
-            badge.className = 'auto-status-badge auto-' + autoStatus.toLowerCase().replace(' ', '');
-        }
-        document.getElementById('dceStatus').value = autoStatus;
-        let mthdNotPaid = document.getElementById('dceMthdNotPaid');
-        if (autoStatus === 'Not Paid') {
-            document.getElementById('dceExpenseGroup').style.display = 'none';
-            if (mthdNotPaid) mthdNotPaid.style.display = 'block';
-            document.getElementById('dceMthd').value = 'Not Paid';
-        } else {
-            document.getElementById('dceExpenseGroup').style.display = 'flex';
-            if (mthdNotPaid) mthdNotPaid.style.display = 'none';
-            if (document.getElementById('dceMthd').value === 'Not Paid') document.getElementById('dceMthd').value =
-                'UPI';
-        }
-        updateStatusChips(autoStatus);
-    }
-
-    function setStatus(status) {
-        document.getElementById('dceStatus').value = status;
-        updateStatusChips(status);
-        let mthdNotPaid = document.getElementById('dceMthdNotPaid');
-        if (status === 'Not Paid') {
-            document.getElementById('dceExpenseGroup').style.display = 'none';
-            if (mthdNotPaid) mthdNotPaid.style.display = 'block';
-            document.getElementById('dceMthd').value = 'Not Paid';
-        } else {
-            document.getElementById('dceExpenseGroup').style.display = 'flex';
-            if (mthdNotPaid) mthdNotPaid.style.display = 'none';
-            if (document.getElementById('dceMthd').value === 'Not Paid') document.getElementById('dceMthd').value =
-                'UPI';
-        }
-        let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
-        let expAmt = parseFloat(document.getElementById('dceExpAmt').value) || 0;
-        let profit = computeProfit(custAmt, expAmt);
-        document.getElementById('dceAutoProfit').value = money(profit);
-        let autoS = computeStatus(custAmt, expAmt);
-        let badge = document.getElementById('autoStatusBadge');
-        if (badge) {
-            badge.textContent = '🤖 Auto: ' + autoS + ' | Manual: ' + status;
-            badge.className = 'auto-status-badge auto-' + autoS.toLowerCase().replace(' ', '');
-        }
-    }
-
-    function updateStatusChips(status) {
-        document.querySelectorAll('#statusSelector .status-chip').forEach(chip => {
-            chip.className = 'status-chip';
-            if (chip.dataset.status === status) {
-                if (status === 'Paid') chip.classList.add('selected-paid');
-                else if (status === 'Partial') chip.classList.add('selected-partial');
-                else chip.classList.add('selected-notpaid');
+            const alCanvas = document.getElementById('aLine');
+            if (alCanvas && d60.length > 0) {
+                const ctx = alCanvas.getContext('2d');
+                const g1 = ctx.createLinearGradient(0, 0, 0, 310);
+                g1.addColorStop(0, 'rgba(229,69,69,0.10)');
+                g1.addColorStop(1, 'rgba(229,69,69,0.0)');
+                const g2 = ctx.createLinearGradient(0, 0, 0, 310);
+                g2.addColorStop(0, 'rgba(13,158,83,0.10)');
+                g2.addColorStop(1, 'rgba(13,158,83,0.0)');
+                const labels = d60.filter((_, i) => i % 5 === 0).map(d => ymdToDmy(d.date));
+                chartRefs['aLine'] = createTradingChart(alCanvas, d60.map(d => ymdToDmy(d.date)), [
+                    { label: 'Expenses', data: d60.map(d => d.expense), borderColor: '#f06060', backgroundColor: g1, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 4, borderWidth: 1.7 },
+                    { label: 'Recovery', data: d60.map(d => d.custAmt), borderColor: '#15b865', backgroundColor: g2, fill: true, tension: 0.48, pointRadius: 0, pointHoverRadius: 4, borderWidth: 1.7 }
+                ]);
             }
-        });
-    }
-
-    async function handleDCESubmit(e) {
-        e.preventDefault();
-        let editId = document.getElementById('dceEditId').value;
-        let custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
-        let expAmt = (document.getElementById('dceStatus').value === 'Not Paid') ? 0 : (parseFloat(document
-            .getElementById('dceExpAmt').value) || 0);
-        let autoS = computeStatus(custAmt, expAmt);
-        let manualS = document.getElementById('dceStatus').value;
-        let finalStatus = manualS || autoS;
-        let profit = computeProfit(custAmt, expAmt);
-        let entry = {
-            id: editId || generateId(),
-            customerAmount: custAmt,
-            expenseAmount: expAmt,
-            date: document.getElementById('dceDt').value,
-            type: document.getElementById('dceTyp').value,
-            method: document.getElementById('dceMthd').value,
-            description: (document.getElementById('dceDesc').value || '').trim(),
-            status: finalStatus,
-            profit: profit,
-            createdAt: editId ? (entries.find(e => e.id === editId)?.createdAt || new Date().toISOString()) :
-                new Date().toISOString()
-        };
-        if (!entry.date || !entry.description) { toast('Please fill all required fields!', 'err'); return; }
-        if (editId) {
-            let idx = entries.findIndex(e => e.id === editId);
-            if (idx >= 0) entries[idx] = entry;
-            await saveSingleEntry(entry);
-            toast('Entry updated!', 'ok');
-            cancelDCEEdit();
-        } else {
-            entries.unshift(entry);
-            await saveSingleEntry(entry);
-            toast('Entry added!', 'ok');
+            const abCanvas = document.getElementById('aBar');
+            if (abCanvas) {
+                const weeks = [];
+                for (let w = 7; w >= 0; w--) {
+                    const ed = new Date(now);
+                    ed.setDate(ed.getDate() - w * 7);
+                    const sd = new Date(ed);
+                    sd.setDate(sd.getDate() - 6);
+                    weeks.push({ label: 'W' + (8 - w), profit: statsOf(entriesBetween(ymdFromDate(sd), ymdFromDate(ed))).profit });
+                }
+                const ctx = abCanvas.getContext('2d');
+                const gP = ctx.createLinearGradient(0, 0, 0, 260);
+                gP.addColorStop(0, 'rgba(63,110,240,0.14)');
+                gP.addColorStop(1, 'rgba(63,110,240,0.0)');
+                chartRefs['aBar'] = createTradingChart(abCanvas, weeks.map(w => w.label), [
+                    { label: 'Weekly Net', data: weeks.map(w => w.profit), borderColor: '#3f6ef0', backgroundColor: gP, fill: true, tension: 0.46, pointRadius: 0, pointHoverRadius: 4, borderWidth: 1.8 }
+                ]);
+            }
+            const ts = statsOf(entries);
+            const el = document.getElementById('aSummary');
+            if (el) el.innerHTML =
+                '<div style="display:grid;gap:0.4rem;">' +
+                '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Total Expenses</span><strong style="color:var(--red);">' + money(ts.expense) + '</strong></div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Total Recovery</span><strong style="color:var(--green);">' + money(ts.custAmt) + '</strong></div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>Net Profit</span><strong style="color:var(--accent);">' + money(ts.profit) + '</strong></div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>✅ Paid</span><strong style="color:var(--green);">' + ts.paidCount + ' entries</strong></div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>🟡 Partial</span><strong style="color:var(--orange);">' + ts.partialCount + ' entries</strong></div>' +
+                '<div style="display:flex;justify-content:space-between;padding:0.42rem 0.6rem;background:var(--surface2);border-radius:7px;"><span>🔴 Not Paid</span><strong style="color:var(--red);">' + ts.notpaidCount + ' entries</strong></div>' + '</div>';
         }
-        document.getElementById('dceForm').reset();
-        document.getElementById('dceDt').value = todayStr();
-        document.getElementById('dceEditId').value = '';
-        document.getElementById('dceCustAmt').value = '0';
-        document.getElementById('dceExpAmt').value = '0';
-        document.getElementById('dceAutoProfit').value = '₹0.00';
-        updateStatusChips('Paid');
-        document.getElementById('dceStatus').value = 'Paid';
-        document.getElementById('dceExpenseGroup').style.display = 'flex';
-        updateDCESummary();
-        renderDCETable();
-        if (curPage === 'dashboard') updateDashboard();
-        if (curPage === 'analytics') renderAnalyticsCharts();
-    }
 
-    function cancelDCEEdit() {
-        document.getElementById('dceEditId').value = '';
-        document.getElementById('dceSubmitBtn').textContent = '💾 Save Entry';
-        document.getElementById('dceCancelBtn').style.display = 'none';
-        document.getElementById('dceForm').reset();
-        document.getElementById('dceDt').value = todayStr();
-        document.getElementById('dceCustAmt').value = '0';
-        document.getElementById('dceExpAmt').value = '0';
-        document.getElementById('dceAutoProfit').value = '₹0.00';
-        updateStatusChips('Paid');
-        document.getElementById('dceStatus').value = 'Paid';
-        document.getElementById('dceExpenseGroup').style.display = 'flex';
-    }
+        // ──────────────────────── FIRESTORE ────────────────────────
 
-    function editDCE(id) {
-        let entry = entries.find(e => e.id === id);
-        if (!entry) return;
-        document.getElementById('dceCustAmt').value = entry.customerAmount || 0;
-        document.getElementById('dceDt').value = entry.date;
-        document.getElementById('dceTyp').value = entry.type || 'Customer Payment';
-        document.getElementById('dceMthd').value = entry.method || 'UPI';
-        document.getElementById('dceDesc').value = entry.description || '';
-        document.getElementById('dceEditId').value = entry.id;
-        document.getElementById('dceSubmitBtn').textContent = '✏️ Update Entry';
-        document.getElementById('dceCancelBtn').style.display = 'inline-flex';
-        if (entry.status !== 'Not Paid') {
-            document.getElementById('dceExpAmt').value = entry.expenseAmount || 0;
-            document.getElementById('dceExpenseGroup').style.display = 'flex';
-        } else {
-            document.getElementById('dceExpenseGroup').style.display = 'none';
-        }
-        autoCalcStatus();
-        updateStatusChips(entry.status || 'Paid');
-        document.getElementById('dceStatus').value = entry.status || 'Paid';
-        navTo('dce');
-        setTimeout(() => document.getElementById('page-dce').scrollIntoView({ behavior: 'smooth' }), 100);
-    }
-
-    async function deleteDCE(id) {
-        let idx = entries.findIndex(e => e.id === id);
-        if (idx < 0) return;
-        deletedEntry = entries[idx];
-        entries.splice(idx, 1);
-        await deleteEntryFromFirestore(id);
-        updateDCESummary();
-        renderDCETable();
-        if (curPage === 'dashboard') updateDashboard();
-        if (curPage === 'analytics') renderAnalyticsCharts();
-        showUndo();
-        toast('Entry deleted', 'err');
-    }
-
-    function showUndo() {
-        let bar = document.getElementById('undoBar');
-        if (!bar) return;
-        bar.style.display = 'flex';
-        clearTimeout(undoTO);
-        undoTO = setTimeout(() => { bar.style.display = 'none';
-            deletedEntry = null; }, 6000);
-    }
-
-    function dismissUndo() { document.getElementById('undoBar').style.display = 'none';
-        deletedEntry = null;
-        clearTimeout(undoTO); }
-
-    async function undoDel() {
-        if (!deletedEntry) return;
-        entries.unshift(deletedEntry);
-        await saveSingleEntry(deletedEntry);
-        deletedEntry = null;
-        updateDCESummary();
-        renderDCETable();
-        if (curPage === 'dashboard') updateDashboard();
-        if (curPage === 'analytics') renderAnalyticsCharts();
-        document.getElementById('undoBar').style.display = 'none';
-        clearTimeout(undoTO);
-        toast('Entry restored!', 'ok');
-    }
-
-    function sortDCE(field) { if (sortF === field) sortD = sortD === 'asc' ? 'desc' : 'asc';
-        else { sortF = field;
-            sortD = 'desc'; } dcePg = 1;
-        renderDCETable(); }
-
-    function getFilteredDCE() {
-        let arr = [...entries];
-        let s = ((document.getElementById('dceSearch') || {}).value || '').toLowerCase();
-        let fs = ((document.getElementById('dceFStatus') || {}).value || 'all');
-        let ff = ((document.getElementById('dceFFrom') || {}).value || '');
-        let fto = ((document.getElementById('dceFTo') || {}).value || '');
-        if (s) arr = arr.filter(e => (e.description || '').toLowerCase().includes(s) || String(e.customerAmount || '')
-            .includes(s) || String(e.expenseAmount || '').includes(s));
-        if (fs !== 'all') arr = arr.filter(e => e.status === fs);
-        if (ff) arr = arr.filter(e => e.date >= normalizeYMD(ff));
-        if (fto) arr = arr.filter(e => e.date <= normalizeYMD(fto));
-        arr.sort((a, b) => {
-            let va, vb;
-            if (sortF === 'date') { va = a.date || '';
-                vb = b.date || ''; } else if (sortF === 'custAmt') { va = Number(a.customerAmount) || 0;
-                vb = Number(b.customerAmount) || 0; } else if (sortF === 'expAmt') { va = Number(a
-                    .expenseAmount) || 0;
-                vb = Number(b.expenseAmount) || 0; } else { va = Number(a.profit) || 0;
-                vb = Number(b.profit) || 0; }
-            if (va < vb) return sortD === 'asc' ? -1 : 1;
-            if (va > vb) return sortD === 'asc' ? 1 : -1;
-            return 0;
-        });
-        return arr;
-    }
-
-    function renderDCETable() {
-        let filtered = getFilteredDCE();
-        let totalP = Math.max(1, Math.ceil(filtered.length / PER_PG));
-        if (dcePg > totalP) dcePg = totalP;
-        if (dcePg < 1) dcePg = 1;
-        let start = (dcePg - 1) * PER_PG;
-        let items = filtered.slice(start, start + PER_PG);
-        let tbody = document.getElementById('dceTbody');
-        if (tbody) tbody.innerHTML = items.map(e => {
-            let statusCls = e.status === 'Paid' ? 'badge-paid' : e.status === 'Partial' ? 'badge-partial' :
-                'badge-notpaid';
-            let methodCls = e.method === 'Cash' ? 'badge-cash' : 'badge-upi';
-            let methodLabel = e.method === 'Cash' ? '💵 Cash' : e.method === 'Not Paid' ? '🚫 Not Paid' :
-                '📱 UPI';
-            return '<tr><td>' + fmtDate(e.date) + '</td><td><strong>' + money(e.customerAmount || 0) +
-                '</strong></td><td><strong>' + money(e.expenseAmount || 0) +
-                '</strong></td><td><strong style="color:' + ((e.profit || 0) >= 0 ? 'var(--green)' :
-                    'var(--red)') + ';">' + money(e.profit || 0) +
-                '</strong></td><td><span class="badge ' + statusCls + '">' + e.status +
-                '</span></td><td><span class="badge ' + methodCls + '">' + methodLabel +
-                '</span></td><td>' + escH(e.description || '') +
-                '</td><td><button class="btn btn-ghost btn-xs" onclick="window._editDCE(\'' + e.id +
-                '\')">✏️</button><button class="btn btn-ghost btn-xs" onclick="window._deleteDCE(\'' + e.id +
-                '\')" style="color:var(--red);">🗑️</button></td></tr>';
-        }).join('');
-        document.getElementById('dceInfo').textContent = filtered.length === 0 ? 'No entries' : 'Showing ' + (start +
-            1) + '-' + Math.min(start + PER_PG, filtered.length) + ' of ' + filtered.length;
-        let pag = '';
-        pag += '<button ' + (dcePg === 1 ? 'disabled' : '') + ' onclick="window._dcePage(1);">«</button>';
-        pag += '<button ' + (dcePg === 1 ? 'disabled' : '') +
-            ' onclick="window._dcePage(Math.max(1,dcePg-1));">‹</button>';
-        for (let i = Math.max(1, dcePg - 2); i <= Math.min(totalP, dcePg + 2); i++) pag += '<button class="' + (i ===
-            dcePg ? 'active' : '') + '" onclick="window._dcePage(' + i + ');">' + i + '</button>';
-        pag += '<button ' + (dcePg === totalP ? 'disabled' : '') +
-            ' onclick="window._dcePage(Math.min(' + totalP + ',dcePg+1));">›</button>';
-        pag += '<button ' + (dcePg === totalP ? 'disabled' : '') + ' onclick="window._dcePage(' + totalP +
-        ');">»</button>';
-        document.getElementById('dcePag').innerHTML = pag;
-    }
-
-    function updateDCESummary() {
-        let s = statsOf(entries);
-        let el = document.getElementById('dceSummaryCards');
-        if (el) el.innerHTML =
-            '<div class="stat-card sc-expense"><div class="sc-icon">💸</div><div class="sc-label">Total Expenses</div><div class="sc-value">' +
-            money(s.expense) + '</div></div>' +
-            '<div class="stat-card sc-pending"><div class="sc-icon">⏳</div><div class="sc-label">Not Paid</div><div class="sc-value">' +
-            s.notpaidCount + ' entries</div></div>' +
-            '<div class="stat-card sc-income"><div class="sc-icon">💰</div><div class="sc-label">Total Recovery</div><div class="sc-value">' +
-            money(s.custAmt) + '</div></div>' +
-            '<div class="stat-card sc-profit"><div class="sc-icon">📊</div><div class="sc-label">Net Profit</div><div class="sc-value">' +
-            money(s.profit) + '</div></div>';
-    }
-
-    function statCardHTML(label, value, cls) {
-        let icons = { income: '💰', expense: '💸', profit: '📊', notpaid: '🔴', partial: '🟡', paid: '✅' };
-        return '<div class="stat-card sc-' + cls + '"><div class="sc-icon">' + (icons[cls] || '📋') +
-            '</div><div class="sc-label">' + label + '</div><div class="sc-value">' + (typeof value === 'number' ?
-                money(value) : value) + '</div></div>';
-    }
-
-    function updateDashboard() {
-        let today = todayStr(),
-            week = getWeekRange(),
-            month = getMonthRange();
-        let sToday = statsOf(entriesBetween(today, today)),
-            sWeek = statsOf(entriesBetween(week.from, week.to)),
-            sMonth = statsOf(entriesBetween(month.from, month.to)),
-            sTotal = statsOf(entries);
-        let sets = [
-            ['statToday', sToday],
-            ['statWeek', sWeek],
-            ['statMonth', sMonth],
-            ['statTotal', sTotal]
-        ];
-        sets.forEach(([id, s]) => {
-            let el = document.getElementById(id);
-            if (el) el.innerHTML = statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery',
-                s.custAmt, 'income') + statCardHTML('Profit', s.profit, 'profit') + statCardHTML(
-                'Not Paid', s.notpaidCount + ' entries', 'notpaid');
-        });
-        let recent = entries.slice(0, 6);
-        let rx = document.getElementById('recentTx');
-        if (rx) rx.innerHTML = recent.length ? recent.map(e => {
-            let sc = e.status === 'Paid' ? 'var(--green)' : e.status === 'Partial' ? 'var(--orange)' :
-                'var(--red)';
-            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid #f4f5f7;"><div><strong>' +
-                escH(e.description || '') + '</strong><br><small style="color:var(--text3);">' + fmtDate(e
-                    .date) + ' · <span style="color:' + sc + ';">' + e.status +
-                '</span></small></div><span style="font-weight:700;">' + money(e.profit || 0) +
-                '</span></div>';
-        }).join('') : '<p style="color:var(--text3);text-align:center;padding:1rem;">No entries yet</p>';
-        renderMainChart();
-    }
-
-    function toggleRptCustom() {
-        let v = (document.getElementById('rptPeriod') || {}).value || 'monthly';
-        document.getElementById('rptFrom').style.display = v === 'custom' ? 'inline-block' : 'none';
-        document.getElementById('rptTo').style.display = v === 'custom' ? 'inline-block' : 'none';
-    }
-
-    function genReport() {
-        let p = (document.getElementById('rptPeriod') || {}).value || 'monthly';
-        let cf = (document.getElementById('rptFrom') || {}).value || '';
-        let ct = (document.getElementById('rptTo') || {}).value || '';
-        let range = getRange(p, cf, ct);
-        let arr = entriesBetween(range.from, range.to);
-        let s = statsOf(arr);
-        let el = document.getElementById('rptStatRow');
-        if (el) el.innerHTML = statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery', s.custAmt,
-            'income') + statCardHTML('Profit', s.profit, 'profit') + statCardHTML('Paid', s.paidCount + ' entries',
-            'paid') + statCardHTML('Partial', s.partialCount + ' entries', 'partial') + statCardHTML('Not Paid', s
-            .notpaidCount + ' entries', 'notpaid') +
-            '<div class="stat-card"><div class="sc-icon" style="background:#f0f4ff;color:#3f6ef0;">📋</div><div class="sc-label">Total Entries</div><div class="sc-value" style="color:#3f6ef0;">' +
-            s.count + '</div></div>';
-        let tb = document.getElementById('rptTbody');
-        if (tb) tb.innerHTML = arr.map(e => {
-            let sc = e.status === 'Paid' ? 'badge-paid' : e.status === 'Partial' ? 'badge-partial' :
-                'badge-notpaid';
-            return '<tr><td>' + fmtDate(e.date) + '</td><td>' + money(e.customerAmount || 0) + '</td><td>' +
-                money(e.expenseAmount || 0) + '</td><td style="color:' + ((e.profit || 0) >= 0 ?
-                    'var(--green)' : 'var(--red)') + ';font-weight:700;">' + money(e.profit || 0) +
-                '</td><td><span class="badge ' + sc + '">' + e.status + '</span></td><td>' + (e.method || '') +
-                '</td><td>' + escH(e.description || '') + '</td></tr>';
-        }).join('');
-    }
-
-    function printReport() {
-        let p = (document.getElementById('rptPeriod') || {}).value || 'monthly';
-        let cf = (document.getElementById('rptFrom') || {}).value || '';
-        let ct = (document.getElementById('rptTo') || {}).value || '';
-        let range = getRange(p, cf, ct);
-        let arr = entriesBetween(range.from, range.to);
-        let s = statsOf(arr);
-        let w = window.open('', '_blank', 'width=800,height=600');
-        if (!w) { toast('Popup blocked', 'err'); return; }
-        w.document.write(
-            '<html><head><title>Kalopsia Report</title><style>body{font-family:Inter,sans-serif;padding:20px;color:#1b1e28}h1{color:#3f6ef0}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #e1e4ea;padding:7px;font-size:0.8rem}th{background:#f9fafb}</style></head><body><h1>Kalopsia - Chullikara Report</h1><p>Period: ' +
-            fmtDate(range.from) + ' – ' + fmtDate(range.to) + '</p><p>Expenses: ' + money(s.expense) +
-            ' | Recovery: ' + money(s.custAmt) + ' | Profit: ' + money(s.profit) + ' | Entries: ' + s.count +
-            '</p><table><thead><tr><th>Date</th><th>Cust. Amt</th><th>Expense</th><th>Profit</th><th>Status</th><th>Method</th><th>Description</th></tr></thead><tbody>' +
-            arr.map(e => '<tr><td>' + fmtDate(e.date) + '</td><td>' + money(e.customerAmount || 0) + '</td><td>' +
-                money(e.expenseAmount || 0) + '</td><td>' + money(e.profit || 0) + '</td><td>' + e.status +
-                '</td><td>' + (e.method || '') + '</td><td>' + escH(e.description || '') + '</td></tr>').join(
-                '') + '</tbody></table></body></html>');
-        w.document.close();
-        w.print();
-    }
-
-    function getExpEntries() { let p = (document.getElementById('expPeriod') || {}).value || 'all'; if (p === 'all')
-        return [...entries]; let r = getRange(p, '', ''); return entriesBetween(r.from, r.to); }
-
-    function updateExpPreview() { let s = statsOf(getExpEntries()); let el = document.getElementById('expPreview'); if (
-            el) el.innerHTML =
-            '<div class="stat-row" style="max-width:500px;margin:0 auto;">' + statCardHTML('Expenses', s.expense,
-                'expense') + statCardHTML('Recovery', s.custAmt, 'income') + statCardHTML('Profit', s.profit,
-            'profit') + '</div>'; }
-
-    function exportPDF() {
-        let arr = getExpEntries(),
-            s = statsOf(arr);
-        let jsPDF = window.jspdf && window.jspdf.jsPDF;
-        if (!jsPDF) { toast('PDF lib missing', 'err'); return; }
-        let doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        doc.setFontSize(16);
-        doc.setTextColor(27, 30, 40);
-        doc.text('Kalopsia - Chullikara Report', 14, 20);
-        doc.setFontSize(8);
-        doc.setTextColor(84, 88, 104);
-        doc.text('Expenses: ' + money(s.expense) + ' | Recovery: ' + money(s.custAmt) + ' | Profit: ' + money(s
-            .profit) + ' | Entries: ' + s.count, 14, 34);
-        doc.autoTable({ startY: 40, head: [
-                ['Date', 'Cust. Amt', 'Expense', 'Profit', 'Status', 'Method', 'Description']
-            ], body: arr.map(e => [fmtDate(e.date), money(e.customerAmount || 0), money(e.expenseAmount || 0),
-                money(e.profit || 0), e.status, e.method || '', e.description || ''
-            ]), styles: { fontSize: 7, cellPadding: 2.5 }, headStyles: { fillColor: [63, 110,
-                240
-            ] }, alternateRowStyles: { fillColor: [245, 247, 250] } });
-        doc.save('kalopsia-report.pdf');
-        toast('PDF exported!', 'ok');
-    }
-
-    function exportExcel() {
-        if (!window.XLSX) { toast('XLSX lib missing', 'err'); return; }
-        let data = getExpEntries().map(e => ({ Date: fmtDate(e.date), 'Cust. Amt': Number(e.customerAmount) || 0,
-            Expense: Number(e.expenseAmount) || 0, Profit: Number(e.profit) || 0, Status: e.status,
-            Method: e.method || '', Description: e.description || '' }));
-        let ws = XLSX.utils.json_to_sheet(data);
-        let wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'DataCentre');
-        XLSX.writeFile(wb, 'kalopsia-data.xlsx');
-        toast('Excel exported!', 'ok');
-    }
-
-    function updateSettings() {
-        let s = statsOf(entries);
-        let el = document.getElementById('setCloud');
-        if (el) el.innerHTML =
-            '<div>☁️ <strong>Firestore:</strong> ' + (fbReady ? 'Connected • kalopsia-0404' : 'Not Connected') +
-            '</div><div>🔁 <strong>Sync:</strong> Real-time cloud</div>';
-        el = document.getElementById('setStats');
-        if (el) el.innerHTML = '<div>📌 <strong>Entries:</strong> ' + s.count + '</div><div>💸 <strong>Expenses:</strong> ' +
-            money(s.expense) + '</div><div>💰 <strong>Recovery:</strong> ' + money(s.custAmt) +
-            '</div><div>📊 <strong>Profit:</strong> ' + money(s.profit) + '</div><div>✅ <strong>Paid:</strong> ' + s
-            .paidCount + ' | 🟡 <strong>Partial:</strong> ' + s.partialCount + ' | 🔴 <strong>Not Paid:</strong> ' + s
-            .notpaidCount + '</div>';
-        el = document.getElementById('setSys');
-        if (el) el.innerHTML =
-            '<div>📦 <strong>App:</strong> Kalopsia Data Centre v7.0</div><div>☁️ <strong>DB:</strong> Firebase Firestore</div><div>💳 <strong>Payments:</strong> UPI + Cash</div><div>🤖 <strong>Status:</strong> Auto-detection enabled</div>';
-    }
-
-    function backupJSON() {
-        let blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
-        let a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'kalopsia-backup-' + todayStr() + '.json';
-        a.click();
-        toast('Backup downloaded!', 'ok');
-    }
-
-    function restoreJSON(e) {
-        let file = e.target.files && e.target.files[0];
-        if (!file) return;
-        let reader = new FileReader();
-        reader.onload = async function(ev) {
+        async function initFB() {
             try {
-                let data = JSON.parse(ev.target.result);
-                if (!Array.isArray(data)) throw new Error('Invalid');
-                if (confirm('Restore ' + data.length + ' entries? This replaces all data.')) {
-                    entries = data;
-                    if (fbReady && db) { let batch = writeBatch(db);
-                        let snap = await getDocs(collection(db, 'transactions'));
-                        snap.docs.forEach(d => batch.delete(d.ref));
-                        entries.forEach(e => { let ref = doc(db, 'transactions', e.id);
-                            batch.set(ref, { ...e }); });
-                        await batch.commit(); }
-                    await loadAllFromFirestore();
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                fbReady = true;
+                window._db = db;
+                updateFBUI(true);
+                return true;
+            } catch (e) {
+                fbReady = false;
+                updateFBUI(false);
+                return false;
+            }
+        }
+
+        async function loadAllFromFirestore() {
+            if (!fbReady || !db) return;
+            try {
+                const snap = await getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc')));
+                entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            } catch (e) { console.warn('Load error:', e); }
+        }
+
+        async function saveSingleEntry(entry) {
+            if (!fbReady || !db) { toast('Firestore not connected!', 'err'); return false; }
+            try {
+                await setDoc(doc(db, 'transactions', entry.id), { ...entry });
+                return true;
+            } catch (e) { toast('Save failed', 'err'); return false; }
+        }
+
+        async function deleteEntryFromFirestore(id) {
+            if (!fbReady || !db) return false;
+            try { await deleteDoc(doc(db, 'transactions', id)); return true; } catch (e) { return false; }
+        }
+
+        // ──────────────────────── NAVIGATION ────────────────────────
+
+        async function navTo(p) {
+            curPage = p;
+            document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+            const pg = document.getElementById('page-' + p);
+            if (pg) pg.classList.add('active');
+            document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
+            const link = document.querySelector('.sidebar-nav li a[data-page="' + p + '"]');
+            if (link) link.classList.add('active');
+            const titles = { dashboard: '📊 Dashboard', dce: '🏗️ Data Centre', reports: '📄 Reports', analytics: '📈 Analytics', export: '📥 Export', settings: '⚙️ Settings' };
+            document.getElementById('pageTitle').textContent = titles[p] || 'Kalopsia - Chullikara';
+            closeSidebar();
+            await refreshPage(p);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('show');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
+        async function refreshPage(p) {
+            switch (p) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'dce':
+                    document.getElementById('dceDt').value = todayDMY();
+                    document.getElementById('dceCustAmt').value = '0';
+                    document.getElementById('dceExpAmt').value = '0';
+                    autoCalcAll();
                     updateDCESummary();
                     renderDCETable();
-                    updateDashboard();
-                    if (curPage === 'analytics') renderAnalyticsCharts();
-                    toast('Data restored!', 'ok');
-                }
-            } catch (err) { toast('Invalid file!', 'err'); }
-        };
-        reader.readAsText(file);
-        e.target.value = '';
-    }
+                    break;
+                case 'reports':
+                    document.getElementById('rptPeriod').value = 'monthly';
+                    toggleRptCustom();
+                    genReport();
+                    break;
+                case 'analytics':
+                    renderAnalyticsCharts();
+                    break;
+                case 'export':
+                    updateExpPreview();
+                    break;
+                case 'settings':
+                    updateSettings();
+                    break;
+            }
+        }
 
-    async function clearAllData() {
-        if (!confirm('Delete ALL entries? This cannot be undone.')) return;
-        if (!confirm('FINAL: All Firestore data will be erased. Continue?')) return;
-        entries = [];
-        if (fbReady && db) { let snap = await getDocs(collection(db, 'transactions')); let batch = writeBatch(db);
-            snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit(); }
-        updateDCESummary();
-        renderDCETable();
-        updateDashboard();
-        if (curPage === 'analytics') renderAnalyticsCharts();
-        toast('All data cleared', 'err');
-    }
+        // ──────────────────────── DCE FORM ────────────────────────
 
-    function updateLiveClock() {
-        let el = document.getElementById('liveDate');
-        if (el) el.textContent = fmtDate(todayStr()) + ' · ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit',
-            minute: '2-digit' });
-    }
+        async function handleDCESubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('dceEditId').value;
+            const custAmt = parseFloat(document.getElementById('dceCustAmt').value) || 0;
+            const expAmt = parseFloat(document.getElementById('dceExpAmt').value) || 0;
+            const dateDMY = (document.getElementById('dceDt').value || '').trim();
+            const ymd = dmyToYmd(dateDMY);
+            if (!ymd) { toast('Please enter a valid date in DD/MM/YYYY format!', 'err'); return; }
+            const autoStatus = computeStatus(custAmt, expAmt);
+            const profit = computeProfit(custAmt, expAmt);
+            let paymentMethod = document.getElementById('dceMthd').value;
+            if (autoStatus === 'Not Paid') paymentMethod = 'Not Paid';
+            const desc = (document.getElementById('dceDesc').value || '').trim();
+            if (!desc) { toast('Please enter a description!', 'err'); return; }
+            const nowISO = new Date().toISOString();
+            const origCreatedAt = document.getElementById('dceOrigCreatedAt').value;
+            const entry = {
+                id: editId || generateId(),
+                customerAmount: custAmt,
+                expenseAmount: expAmt,
+                profit: profit,
+                status: autoStatus,
+                paymentMethod: paymentMethod,
+                description: desc,
+                date: ymd,
+                createdAt: editId ? (origCreatedAt || nowISO) : nowISO,
+                updatedAt: nowISO
+            };
+            if (editId) {
+                const idx = entries.findIndex(e => e.id === editId);
+                if (idx >= 0) entries[idx] = entry;
+                await saveSingleEntry(entry);
+                toast('Entry updated!', 'ok');
+                cancelDCEEdit();
+            } else {
+                entries.unshift(entry);
+                await saveSingleEntry(entry);
+                toast('Entry added!', 'ok');
+            }
+            resetDCEForm();
+            updateDCESummary();
+            renderDCETable();
+            if (curPage === 'dashboard') updateDashboard();
+            if (curPage === 'analytics') renderAnalyticsCharts();
+        }
 
-    async function init() {
-        await initFB();
-        if (fbReady) await loadAllFromFirestore();
-        document.getElementById('dceDt').value = todayStr();
-        document.getElementById('dceCustAmt').value = '0';
-        document.getElementById('dceExpAmt').value = '0';
-        autoCalcStatus();
-        updateLiveClock();
-        setInterval(updateLiveClock, 30000);
-        updateDashboard();
-        updateDCESummary();
-        updateSettings();
-        document.getElementById('rptPeriod').addEventListener('change', () => { toggleRptCustom();
-            genReport(); });
-        document.getElementById('expPeriod').addEventListener('change', updateExpPreview);
-        console.log('✅ Kalopsia - Chullikara | Auto-Status System Ready');
-    }
+        function resetDCEForm() {
+            document.getElementById('dceForm').reset();
+            document.getElementById('dceDt').value = todayDMY();
+            document.getElementById('dceCustAmt').value = '0';
+            document.getElementById('dceExpAmt').value = '0';
+            document.getElementById('dceAutoProfit').value = '₹0.00';
+            document.getElementById('dceEditId').value = '';
+            document.getElementById('dceOrigCreatedAt').value = '';
+            document.getElementById('dceSubmitBtn').textContent = '💾 Save Entry';
+            document.getElementById('dceCancelBtn').style.display = 'none';
+            const badge = document.getElementById('autoStatusBadge');
+            if (badge) { badge.textContent = '🤖 Auto: Paid';
+                badge.className = 'auto-status-badge status-paid'; }
+            document.getElementById('dceMthd').value = 'UPI';
+        }
 
-    window.navTo = navTo;
-    window.toggleSidebar = toggleSidebar;
-    window.closeSidebar = closeSidebar;
-    window.setStatus = setStatus;
-    window.autoCalcStatus = autoCalcStatus;
-    window.handleDCESubmit = handleDCESubmit;
-    window.cancelDCEEdit = cancelDCEEdit;
-    window._editDCE = editDCE;
-    window._deleteDCE = deleteDCE;
-    window.undoDel = undoDel;
-    window.dismissUndo = dismissUndo;
-    window.sortDCE = sortDCE;
-    window.renderDCETable = renderDCETable;
-    window._dcePage = function(p) { dcePg = p;
-        renderDCETable(); };
-    window.toggleRptCustom = toggleRptCustom;
-    window.genReport = genReport;
-    window.printReport = printReport;
-    window.updateExpPreview = updateExpPreview;
-    window.exportPDF = exportPDF;
-    window.exportExcel = exportExcel;
-    window.backupJSON = backupJSON;
-    window.restoreJSON = restoreJSON;
-    window.clearAllData = clearAllData;
-    window.updateDCESummary = updateDCESummary;
+        function cancelDCEEdit() {
+            resetDCEForm();
+        }
 
-    document.addEventListener('DOMContentLoaded', init);
-</script>
+        function editDCE(id) {
+            const entry = entries.find(e => e.id === id);
+            if (!entry) return;
+            document.getElementById('dceCustAmt').value = entry.customerAmount || 0;
+            document.getElementById('dceExpAmt').value = entry.expenseAmount || 0;
+            document.getElementById('dceDt').value = ymdToDmy(entry.date);
+            document.getElementById('dceMthd').value = entry.paymentMethod || 'UPI';
+            document.getElementById('dceDesc').value = entry.description || '';
+            document.getElementById('dceEditId').value = entry.id;
+            document.getElementById('dceOrigCreatedAt').value = entry.createdAt || '';
+            document.getElementById('dceSubmitBtn').textContent = '✏️ Update Entry';
+            document.getElementById('dceCancelBtn').style.display = 'inline-flex';
+            autoCalcAll();
+            navTo('dce');
+            setTimeout(() => document.getElementById('page-dce').scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+
+        async function deleteDCE(id) {
+            const idx = entries.findIndex(e => e.id === id);
+            if (idx < 0) return;
+            deletedEntry = entries[idx];
+            entries.splice(idx, 1);
+            await deleteEntryFromFirestore(id);
+            updateDCESummary();
+            renderDCETable();
+            if (curPage === 'dashboard') updateDashboard();
+            if (curPage === 'analytics') renderAnalyticsCharts();
+            showUndo();
+            toast('Entry deleted', 'err');
+        }
+
+        function showUndo() {
+            const bar = document.getElementById('undoBar');
+            if (!bar) return;
+            bar.style.display = 'flex';
+            clearTimeout(undoTO);
+            undoTO = setTimeout(() => { bar.style.display = 'none';
+                deletedEntry = null; }, 6000);
+        }
+
+        function dismissUndo() {
+            document.getElementById('undoBar').style.display = 'none';
+            deletedEntry = null;
+            clearTimeout(undoTO);
+        }
+
+        async function undoDel() {
+            if (!deletedEntry) return;
+            entries.unshift(deletedEntry);
+            await saveSingleEntry(deletedEntry);
+            deletedEntry = null;
+            updateDCESummary();
+            renderDCETable();
+            if (curPage === 'dashboard') updateDashboard();
+            if (curPage === 'analytics') renderAnalyticsCharts();
+            document.getElementById('undoBar').style.display = 'none';
+            clearTimeout(undoTO);
+            toast('Entry restored!', 'ok');
+        }
+
+        // ──────────────────────── DCE TABLE ────────────────────────
+
+        function sortDCE(field) {
+            if (sortF === field) sortD = sortD === 'asc' ? 'desc' : 'asc';
+            else { sortF = field;
+                sortD = 'desc'; }
+            dcePg = 1;
+            renderDCETable();
+        }
+
+        function getFilteredDCE() {
+            let arr = [...entries];
+            const s = ((document.getElementById('dceSearch') || {}).value || '').toLowerCase();
+            const fs = ((document.getElementById('dceFStatus') || {}).value || 'all');
+            const ff = ((document.getElementById('dceFFrom') || {}).value || '').trim();
+            const fto = ((document.getElementById('dceFTo') || {}).value || '').trim();
+            if (s) arr = arr.filter(e => (e.description || '').toLowerCase().includes(s) || String(e.customerAmount || '').includes(s) || String(e.expenseAmount || '').includes(s));
+            if (fs !== 'all') arr = arr.filter(e => e.status === fs);
+            if (ff) { const ymdF = dmyToYmd(ff); if (ymdF) arr = arr.filter(e => e.date >= ymdF); }
+            if (fto) { const ymdT = dmyToYmd(fto); if (ymdT) arr = arr.filter(e => e.date <= ymdT); }
+            arr.sort((a, b) => {
+                let va, vb;
+                if (sortF === 'date') { va = a.date || '';
+                    vb = b.date || ''; } else if (sortF === 'custAmt') { va = Number(a.customerAmount) || 0;
+                    vb = Number(b.customerAmount) || 0; } else if (sortF === 'expAmt') { va = Number(a.expenseAmount) || 0;
+                    vb = Number(b.expenseAmount) || 0; } else { va = Number(a.profit) || 0;
+                    vb = Number(b.profit) || 0; }
+                if (va < vb) return sortD === 'asc' ? -1 : 1;
+                if (va > vb) return sortD === 'asc' ? 1 : -1;
+                return 0;
+            });
+            return arr;
+        }
+
+        function renderDCETable() {
+            const filtered = getFilteredDCE();
+            const totalP = Math.max(1, Math.ceil(filtered.length / PER_PG));
+            if (dcePg > totalP) dcePg = totalP;
+            if (dcePg < 1) dcePg = 1;
+            const start = (dcePg - 1) * PER_PG;
+            const items = filtered.slice(start, start + PER_PG);
+            const tbody = document.getElementById('dceTbody');
+            if (tbody) tbody.innerHTML = items.map(e => {
+                const statusCls = e.status === 'Paid' ? 'badge-paid' : e.status === 'Partial' ? 'badge-partial' : 'badge-notpaid';
+                const pm = e.paymentMethod || '';
+                const methodCls = pm === 'Cash' ? 'badge-cash' : pm === 'Not Paid' ? 'badge-np' : 'badge-upi';
+                const methodLabel = pm === 'Cash' ? '💵 Cash' : pm === 'Not Paid' ? '🚫 Not Paid' : '📱 UPI';
+                return '<tr><td>' + ymdToDmy(e.date) + '</td><td><strong>' + money(e.customerAmount || 0) + '</strong></td><td><strong>' + money(e.expenseAmount || 0) + '</strong></td><td><strong style="color:' + ((e.profit || 0) >= 0 ? 'var(--green)' : 'var(--red)') + ';">' + money(e.profit || 0) + '</strong></td><td><span class="badge ' + statusCls + '">' + e.status + '</span></td><td><span class="badge ' + methodCls + '">' + methodLabel + '</span></td><td>' + escH(e.description || '') + '</td><td><button class="btn btn-ghost btn-xs" onclick="window._editDCE(\'' + e.id + '\')">✏️</button><button class="btn btn-ghost btn-xs" onclick="window._deleteDCE(\'' + e.id + '\')" style="color:var(--red);">🗑️</button></td></tr>';
+            }).join('');
+            document.getElementById('dceInfo').textContent = filtered.length === 0 ? 'No entries' : 'Showing ' + (start + 1) + '-' + Math.min(start + PER_PG, filtered.length) + ' of ' + filtered.length;
+            let pag = '';
+            pag += '<button ' + (dcePg === 1 ? 'disabled' : '') + ' onclick="window._dcePage(1);">«</button>';
+            pag += '<button ' + (dcePg === 1 ? 'disabled' : '') + ' onclick="window._dcePage(Math.max(1,dcePg-1));">‹</button>';
+            for (let i = Math.max(1, dcePg - 2); i <= Math.min(totalP, dcePg + 2); i++) pag += '<button class="' + (i === dcePg ? 'active' : '') + '" onclick="window._dcePage(' + i + ');">' + i + '</button>';
+            pag += '<button ' + (dcePg === totalP ? 'disabled' : '') + ' onclick="window._dcePage(Math.min(' + totalP + ',dcePg+1));">›</button>';
+            pag += '<button ' + (dcePg === totalP ? 'disabled' : '') + ' onclick="window._dcePage(' + totalP + ');">»</button>';
+            document.getElementById('dcePag').innerHTML = pag;
+        }
+
+        function updateDCESummary() {
+            const s = statsOf(entries);
+            const el = document.getElementById('dceSummaryCards');
+            if (el) el.innerHTML =
+                '<div class="stat-card sc-expense"><div class="sc-icon">💸</div><div class="sc-label">Total Expenses</div><div class="sc-value">' + money(s.expense) + '</div></div>' +
+                '<div class="stat-card sc-pending"><div class="sc-icon">⏳</div><div class="sc-label">Not Paid</div><div class="sc-value">' + s.notpaidCount + ' entries</div></div>' +
+                '<div class="stat-card sc-income"><div class="sc-icon">💰</div><div class="sc-label">Total Recovery</div><div class="sc-value">' + money(s.custAmt) + '</div></div>' +
+                '<div class="stat-card sc-profit"><div class="sc-icon">📊</div><div class="sc-label">Net Profit</div><div class="sc-value">' + money(s.profit) + '</div></div>';
+        }
+
+        function statCardHTML(label, value, cls) {
+            const icons = { income: '💰', expense: '💸', profit: '📊', notpaid: '🔴', partial: '🟡', paid: '✅' };
+            return '<div class="stat-card sc-' + cls + '"><div class="sc-icon">' + (icons[cls] || '📋') + '</div><div class="sc-label">' + label + '</div><div class="sc-value">' + (typeof value === 'number' ? money(value) : value) + '</div></div>';
+        }
+
+        function updateDashboard() {
+            const today = todayYMD(),
+                week = getWeekRange(),
+                month = getMonthRange();
+            const sToday = statsOf(entriesBetween(today, today)),
+                sWeek = statsOf(entriesBetween(week.from, week.to)),
+                sMonth = statsOf(entriesBetween(month.from, month.to)),
+                sTotal = statsOf(entries);
+            const sets = [
+                ['statToday', sToday],
+                ['statWeek', sWeek],
+                ['statMonth', sMonth],
+                ['statTotal', sTotal]
+            ];
+            sets.forEach(([id, s]) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery', s.custAmt, 'income') + statCardHTML('Profit', s.profit, 'profit') + statCardHTML('Not Paid', s.notpaidCount + ' entries', 'notpaid');
+            });
+            const recent = entries.slice(0, 6);
+            const rx = document.getElementById('recentTx');
+            if (rx) rx.innerHTML = recent.length ? recent.map(e => {
+                const sc = e.status === 'Paid' ? 'var(--green)' : e.status === 'Partial' ? 'var(--orange)' : 'var(--red)';
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0;border-bottom:1px solid #f4f5f7;"><div><strong>' + escH(e.description || '') + '</strong><br><small style="color:var(--text3);">' + ymdToDmy(e.date) + ' · <span style="color:' + sc + ';">' + e.status + '</span></small></div><span style="font-weight:700;">' + money(e.profit || 0) + '</span></div>';
+            }).join('') : '<p style="color:var(--text3);text-align:center;padding:1rem;">No entries yet</p>';
+            renderMainChart();
+        }
+
+        // ──────────────────────── REPORTS ────────────────────────
+
+        function toggleRptCustom() {
+            const v = (document.getElementById('rptPeriod') || {}).value || 'monthly';
+            document.getElementById('rptFrom').style.display = v === 'custom' ? 'inline-block' : 'none';
+            document.getElementById('rptTo').style.display = v === 'custom' ? 'inline-block' : 'none';
+        }
+
+        function genReport() {
+            const p = (document.getElementById('rptPeriod') || {}).value || 'monthly';
+            const cf = (document.getElementById('rptFrom') || {}).value || '';
+            const ct = (document.getElementById('rptTo') || {}).value || '';
+            const range = getRange(p, cf, ct);
+            const arr = entriesBetween(range.from, range.to);
+            const s = statsOf(arr);
+            const el = document.getElementById('rptStatRow');
+            if (el) el.innerHTML = statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery', s.custAmt, 'income') + statCardHTML('Profit', s.profit, 'profit') + statCardHTML('Paid', s.paidCount + ' entries', 'paid') + statCardHTML('Partial', s.partialCount + ' entries', 'partial') + statCardHTML('Not Paid', s.notpaidCount + ' entries', 'notpaid') + '<div class="stat-card"><div class="sc-icon" style="background:#f0f4ff;color:#3f6ef0;">📋</div><div class="sc-label">Total Entries</div><div class="sc-value" style="color:#3f6ef0;">' + s.count + '</div></div>';
+            const tb = document.getElementById('rptTbody');
+            if (tb) tb.innerHTML = arr.map(e => {
+                const sc = e.status === 'Paid' ? 'badge-paid' : e.status === 'Partial' ? 'badge-partial' : 'badge-notpaid';
+                return '<tr><td>' + ymdToDmy(e.date) + '</td><td>' + money(e.customerAmount || 0) + '</td><td>' + money(e.expenseAmount || 0) + '</td><td style="color:' + ((e.profit || 0) >= 0 ? 'var(--green)' : 'var(--red)') + ';font-weight:700;">' + money(e.profit || 0) + '</td><td><span class="badge ' + sc + '">' + e.status + '</span></td><td>' + (e.paymentMethod || '') + '</td><td>' + escH(e.description || '') + '</td></tr>';
+            }).join('');
+        }
+
+        function printReport() {
+            const p = (document.getElementById('rptPeriod') || {}).value || 'monthly';
+            const cf = (document.getElementById('rptFrom') || {}).value || '';
+            const ct = (document.getElementById('rptTo') || {}).value || '';
+            const range = getRange(p, cf, ct);
+            const arr = entriesBetween(range.from, range.to);
+            const s = statsOf(arr);
+            const w = window.open('', '_blank', 'width=800,height=600');
+            if (!w) { toast('Popup blocked', 'err'); return; }
+            w.document.write('<html><head><title>Kalopsia Report</title><style>body{font-family:Inter,sans-serif;padding:20px;color:#1b1e28}h1{color:#3f6ef0}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #e1e4ea;padding:7px;font-size:0.8rem}th{background:#f9fafb}</style></head><body><h1>Kalopsia - Chullikara Report</h1><p>Period: ' + ymdToDmy(range.from) + ' – ' + ymdToDmy(range.to) + '</p><p>Expenses: ' + money(s.expense) + ' | Recovery: ' + money(s.custAmt) + ' | Profit: ' + money(s.profit) + ' | Entries: ' + s.count + '</p><table><thead><tr><th>Date</th><th>Cust. Amt</th><th>Expense</th><th>Profit</th><th>Status</th><th>Method</th><th>Description</th></tr></thead><tbody>' + arr.map(e => '<tr><td>' + ymdToDmy(e.date) + '</td><td>' + money(e.customerAmount || 0) + '</td><td>' + money(e.expenseAmount || 0) + '</td><td>' + money(e.profit || 0) + '</td><td>' + e.status + '</td><td>' + (e.paymentMethod || '') + '</td><td>' + escH(e.description || '') + '</td></tr>').join('') + '</tbody></table></body></html>');
+            w.document.close();
+            w.print();
+        }
+
+        // ──────────────────────── EXPORT ────────────────────────
+
+        function getExpEntries() {
+            const p = (document.getElementById('expPeriod') || {}).value || 'all';
+            if (p === 'all') return [...entries];
+            const r = getRange(p, '', '');
+            return entriesBetween(r.from, r.to);
+        }
+
+        function updateExpPreview() {
+            const s = statsOf(getExpEntries());
+            const el = document.getElementById('expPreview');
+            if (el) el.innerHTML = '<div class="stat-row" style="max-width:500px;margin:0 auto;">' + statCardHTML('Expenses', s.expense, 'expense') + statCardHTML('Recovery', s.custAmt, 'income') + statCardHTML('Profit', s.profit, 'profit') + '</div>';
+        }
+
+        function exportPDF() {
+            const arr = getExpEntries(),
+                s = statsOf(arr);
+            const jsPDF = window.jspdf && window.jspdf.jsPDF;
+            if (!jsPDF) { toast('PDF lib missing', 'err'); return; }
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            doc.setFontSize(16);
+            doc.setTextColor(27, 30, 40);
+            doc.text('Kalopsia - Chullikara Report', 14, 20);
+            doc.setFontSize(8);
+            doc.setTextColor(84, 88, 104);
+            doc.text('Expenses: ' + money(s.expense) + ' | Recovery: ' + money(s.custAmt) + ' | Profit: ' + money(s.profit) + ' | Entries: ' + s.count, 14, 34);
+            doc.autoTable({ startY: 40, head: [
+                    ['Date', 'Cust. Amt', 'Expense', 'Profit', 'Status', 'Method', 'Description']
+                ], body: arr.map(e => [ymdToDmy(e.date), money(e.customerAmount || 0), money(e.expenseAmount || 0),
+                    money(e.profit || 0), e.status, e.paymentMethod || '', e.description || ''
+                ]), styles: { fontSize: 7, cellPadding: 2.5 }, headStyles: { fillColor: [63, 110, 240] },
+                alternateRowStyles: { fillColor: [245, 247, 250] } });
+            doc.save('kalopsia-report.pdf');
+            toast('PDF exported!', 'ok');
+        }
+
+        function exportExcel() {
+            if (!window.XLSX) { toast('XLSX lib missing', 'err'); return; }
+            const data = getExpEntries().map(e => ({ Date: ymdToDmy(e.date), 'Cust. Amt': Number(e.customerAmount) || 0,
+                Expense: Number(e.expenseAmount) || 0, Profit: Number(e.profit) || 0, Status: e.status,
+                Method: e.paymentMethod || '', Description: e.description || '' }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'DataCentre');
+            XLSX.writeFile(wb, 'kalopsia-data.xlsx');
+            toast('Excel exported!', 'ok');
+        }
+
+        // ──────────────────────── SETTINGS ────────────────────────
+
+        function updateSettings() {
+            const s = statsOf(entries);
+            let el = document.getElementById('setCloud');
+            if (el) el.innerHTML = '<div>☁️ <strong>Firestore:</strong> ' + (fbReady ? 'Connected • kalopsia-0404' : 'Not Connected') + '</div><div>🔁 <strong>Sync:</strong> Real-time cloud</div>';
+            el = document.getElementById('setStats');
+            if (el) el.innerHTML = '<div>📌 <strong>Entries:</strong> ' + s.count + '</div><div>💸 <strong>Expenses:</strong> ' + money(s.expense) + '</div><div>💰 <strong>Recovery:</strong> ' + money(s.custAmt) + '</div><div>📊 <strong>Profit:</strong> ' + money(s.profit) + '</div><div>✅ <strong>Paid:</strong> ' + s.paidCount + ' | 🟡 <strong>Partial:</strong> ' + s.partialCount + ' | 🔴 <strong>Not Paid:</strong> ' + s.notpaidCount + '</div>';
+            el = document.getElementById('setSys');
+            if (el) el.innerHTML = '<div>📦 <strong>App:</strong> Kalopsia Data Centre v8.0</div><div>☁️ <strong>DB:</strong> Firebase Firestore</div><div>💳 <strong>Payments:</strong> UPI + Cash</div><div>🤖 <strong>Status:</strong> Auto-detection engine</div>';
+        }
+
+        function backupJSON() {
+            const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'kalopsia-backup-' + todayYMD() + '.json';
+            a.click();
+            toast('Backup downloaded!', 'ok');
+        }
+
+        function restoreJSON(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (!Array.isArray(data)) throw new Error('Invalid');
+                    if (confirm('Restore ' + data.length + ' entries? This replaces all data.')) {
+                        entries = data;
+                        if (fbReady && db) {
+                            const batch = writeBatch(db);
+                            const snap = await getDocs(collection(db, 'transactions'));
+                            snap.docs.forEach(d => batch.delete(d.ref));
+                            entries.forEach(e => { const ref = doc(db, 'transactions', e.id);
+                                batch.set(ref, { ...e }); });
+                            await batch.commit();
+                        }
+                        await loadAllFromFirestore();
+                        updateDCESummary();
+                        renderDCETable();
+                        updateDashboard();
+                        if (curPage === 'analytics') renderAnalyticsCharts();
+                        toast('Data restored!', 'ok');
+                    }
+                } catch (err) { toast('Invalid file!', 'err'); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        async function clearAllData() {
+            if (!confirm('Delete ALL entries? This cannot be undone.')) return;
+            if (!confirm('FINAL: All Firestore data will be erased. Continue?')) return;
+            entries = [];
+            if (fbReady && db) {
+                const snap = await getDocs(collection(db, 'transactions'));
+                const batch = writeBatch(db);
+                snap.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+            }
+            updateDCESummary();
+            renderDCETable();
+            updateDashboard();
+            if (curPage === 'analytics') renderAnalyticsCharts();
+            toast('All data cleared', 'err');
+        }
+
+        function updateLiveClock() {
+            const el = document.getElementById('liveDate');
+            if (el) el.textContent = todayDMY() + ' · ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit',
+                minute: '2-digit' });
+        }
+
+        // ──────────────────────── INIT ────────────────────────
+
+        async function init() {
+            await initFB();
+            if (fbReady) await loadAllFromFirestore();
+            document.getElementById('dceDt').value = todayDMY();
+            document.getElementById('dceCustAmt').value = '0';
+            document.getElementById('dceExpAmt').value = '0';
+            autoCalcAll();
+            updateLiveClock();
+            setInterval(updateLiveClock, 30000);
+            updateDashboard();
+            updateDCESummary();
+            updateSettings();
+            document.getElementById('rptPeriod').addEventListener('change', () => { toggleRptCustom();
+                genReport(); });
+            document.getElementById('expPeriod').addEventListener('change', updateExpPreview);
+            console.log('✅ Kalopsia - Chullikara | Auto-Status Engine Ready | v8.0');
+        }
+
+        // ──────────────────────── GLOBAL EXPOSURES ────────────────────────
+
+        window.navTo = navTo;
+        window.toggleSidebar = toggleSidebar;
+        window.closeSidebar = closeSidebar;
+        window.autoCalcAll = autoCalcAll;
+        window.validateDateInput = validateDateInput;
+        window.handleDCESubmit = handleDCESubmit;
+        window.cancelDCEEdit = cancelDCEEdit;
+        window._editDCE = editDCE;
+        window._deleteDCE = deleteDCE;
+        window.undoDel = undoDel;
+        window.dismissUndo = dismissUndo;
+        window.sortDCE = sortDCE;
+        window.renderDCETable = renderDCETable;
+        window._dcePage = function(p) { dcePg = p;
+            renderDCETable(); };
+        window.toggleRptCustom = toggleRptCustom;
+        window.genReport = genReport;
+        window.printReport = printReport;
+        window.updateExpPreview = updateExpPreview;
+        window.exportPDF = exportPDF;
+        window.exportExcel = exportExcel;
+        window.backupJSON = backupJSON;
+        window.restoreJSON = restoreJSON;
+        window.clearAllData = clearAllData;
+        window.updateDCESummary = updateDCESummary;
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
